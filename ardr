@@ -1,0 +1,134 @@
+# ADR 0001: Use Event-Driven Architecture for the Payments Domain
+
+# Status
+
+Accepted
+
+---
+
+# Context
+
+The Payments Domain is responsible for processing financial transactions, managing payment state transitions, integrating with external payment providers, and communicating results to multiple downstream systems such as Orders, Billing, Notifications, Fraud Detection, and Reporting.
+
+Historically, payment systems built with tightly coupled synchronous APIs have suffered from:
+
+* High coupling between domains
+* Difficult scalability under peak load
+* Fragile failure handling when external providers are slow or unavailable
+* Limited ability to replay or audit payment state transitions
+* Complex retry and compensation logic embedded in synchronous flows
+
+Additionally, payment processing requires:
+
+* Reliable delivery of state changes
+* Traceability for audit and compliance
+* Loose coupling between consumers of payment data
+* High resilience to partial system failure
+
+We need an architecture that supports:
+
+* Scalability under high transaction volume
+* Reliable propagation of payment state changes
+* Decoupling between payment execution and downstream consumers
+* Auditability and replayability of events
+
+---
+
+# Decision
+
+We will adopt an **event-driven architecture** for the Payments Domain.
+
+Specifically:
+
+* The Payments Domain will publish domain events for all significant state changes.
+* Downstream systems will consume these events asynchronously.
+* Internal state changes will be persisted before event publication (outbox pattern recommended).
+* Synchronous APIs will be limited to command initiation (e.g., payment creation, status queries).
+
+### Key Events
+
+* PaymentCreated
+* PaymentProcessing
+* PaymentCompleted
+* PaymentFailed
+* PaymentRefunded
+
+---
+
+# Consequences
+
+## Positive
+
+* **Loose Coupling:** Downstream systems (Notifications, Fraud, Reporting) do not depend on Payments API availability.
+* **Scalability:** Event consumers can scale independently based on load.
+* **Resilience:** Temporary outages in consumers do not affect payment processing.
+* **Auditability:** Events provide an immutable history of system behavior.
+* **Extensibility:** New consumers can be added without modifying Payments Domain logic.
+* **Replayability:** Events can be replayed for recovery or reprocessing.
+
+---
+
+## Negative
+
+* **Eventual Consistency:** Downstream systems may not immediately reflect payment state changes.
+* **Increased Complexity:** Requires event schema management and versioning strategy.
+* **Operational Overhead:** Requires event infrastructure (Kafka or equivalent) and monitoring.
+* **Debugging Difficulty:** Distributed event flows are harder to trace than synchronous calls.
+
+---
+
+## Mitigations
+
+* Use correlation IDs across all events for traceability.
+* Implement schema versioning via a schema registry.
+* Use the outbox pattern to ensure reliable event publication.
+* Provide observability tooling (distributed tracing + structured logs).
+* Define strict event contracts in a dedicated domain-event model.
+
+---
+
+# Alternatives Considered
+
+## Synchronous REST-Based Integration
+
+* All consumers directly call Payments API for updates.
+
+**Rejected because:**
+
+* Tight coupling between domains
+* Poor scalability under load
+* Fragile failure handling
+* Difficult to extend without modifying core system
+
+---
+
+## Polling-Based Integration
+
+* Consumers periodically query payment status.
+
+**Rejected because:**
+
+* Inefficient and resource-intensive
+* Delayed propagation of state changes
+* High load on Payments API
+* Poor scalability for multiple consumers
+
+---
+
+## Hybrid Approach (Limited Events + Synchronous Calls)
+
+* Some events emitted, but most logic remains synchronous.
+
+**Rejected because:**
+
+* Inconsistent architecture model
+* Partial decoupling leads to hidden dependencies
+* Harder long-term maintenance
+
+---
+
+# Decision Outcome
+
+Event-driven architecture is adopted as the **primary integration and communication model** for the Payments Domain. Synchronous APIs are restricted to command initiation and query operations only.
+
+All future enhancements must conform to this architecture unless explicitly overridden by a new ADR.
