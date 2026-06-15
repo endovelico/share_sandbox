@@ -1,0 +1,309 @@
+# Payments Domain – Monitoring & Observability
+
+# Purpose
+
+This document defines the monitoring strategy for the Payments Domain, covering metrics, logs, traces, and alerts.
+
+The goal is to ensure full visibility into payment processing, system health, and business-critical operations.
+
+Observability in a Payments Domain is not optional—it is a core requirement for correctness, reliability, and compliance.
+
+---
+
+# Metrics
+
+Metrics provide quantitative insight into system behavior and business performance.
+
+---
+
+## Business Metrics
+
+### Payment Success Rate
+
+* Definition: Percentage of successfully completed payments
+* Formula: `completed_payments / total_payments`
+* Target: ≥ 99.5%
+
+---
+
+### Payment Failure Rate
+
+* Definition: Percentage of failed payment attempts
+* Target: ≤ 0.5%
+
+---
+
+### Payment Volume
+
+* Definition: Total number of payments processed per time unit
+* Used for load forecasting and scaling decisions
+
+---
+
+### Refund Rate
+
+* Definition: Percentage of payments refunded
+* Used for financial and fraud analysis
+
+---
+
+## Performance Metrics
+
+### Payment Processing Latency
+
+* p50, p95, p99 latency for payment execution
+* Target:
+
+  * p95 ≤ 500ms (excluding PSP latency)
+
+---
+
+### API Response Time
+
+* GET /payments latency
+* POST /payments latency
+
+---
+
+### Provider Response Time
+
+* Latency from external PSPs
+* Used to detect provider degradation
+
+---
+
+## System Metrics
+
+### Error Rate
+
+* HTTP 4xx and 5xx responses
+* Service-level failure detection
+
+---
+
+### Queue Lag
+
+* Kafka lag for payment event processing
+* Indicates downstream backlog
+
+---
+
+### Database Performance
+
+* Query latency
+* Lock wait time
+* Connection pool utilization
+
+---
+
+# Logs
+
+Logs provide detailed event-level insights for debugging and auditability.
+
+---
+
+## Logging Standards
+
+* All logs must be structured (JSON format)
+* Each log must include:
+
+  * correlationId
+  * paymentId (if available)
+  * timestamp
+  * service name
+  * log level
+
+---
+
+## Log Types
+
+### Application Logs
+
+* Payment creation
+* State transitions
+* Business rule validation results
+
+---
+
+### Error Logs
+
+* Provider failures
+* Validation errors
+* Unexpected exceptions
+
+---
+
+### Audit Logs
+
+* Payment state changes
+* Refund operations
+* Administrative actions
+
+---
+
+## Sensitive Data Rules
+
+* No payment card data may be logged
+* No PII should appear in logs
+* Secrets and credentials are strictly forbidden in logs
+
+---
+
+# Traces
+
+Distributed tracing provides end-to-end visibility across payment workflows.
+
+---
+
+## Trace Requirements
+
+* Every request must have a correlation ID
+* Traces must propagate across all services:
+
+  * API Service
+  * Processing Service
+  * Provider Adapters
+  * Event Bus
+
+---
+
+## Trace Coverage
+
+### Payment Initiation Flow
+
+* API request → validation → persistence → event emission
+
+### Payment Processing Flow
+
+* Orchestration → provider call → state transition → event publication
+
+### Refund Flow
+
+* Refund request → validation → provider interaction → state update
+
+---
+
+## Trace Tools
+
+* OpenTelemetry for instrumentation
+* Jaeger / Tempo / equivalent tracing backend
+
+---
+
+# Alerts
+
+Alerts ensure rapid detection of failures and anomalies in payment processing.
+
+---
+
+## Critical Alerts
+
+### Payment Failure Spike
+
+* Trigger: failure rate > 2% over 5 minutes
+* Severity: Critical
+* Action: Immediate investigation required
+
+---
+
+### Provider Outage Detection
+
+* Trigger: PSP response failure rate > threshold
+* Severity: Critical
+* Action: Switch provider or disable routing
+
+---
+
+### Payment Processing Delay
+
+* Trigger: p95 latency > 1s
+* Severity: High
+* Action: Investigate performance bottlenecks
+
+---
+
+### Kafka Lag Increase
+
+* Trigger: consumer lag > threshold
+* Severity: High
+* Action: Scale consumers or investigate backlog
+
+---
+
+## Warning Alerts
+
+### Increased Refund Rate
+
+* Indicates potential fraud or customer dissatisfaction
+
+---
+
+### Elevated Retry Rates
+
+* Indicates unstable provider or network issues
+
+---
+
+## Informational Alerts
+
+* Deployment success/failure
+* Feature flag activation
+* Schema migration events
+
+---
+
+## Alert Routing
+
+* Critical alerts → On-call SRE team (immediate paging)
+* High severity → Engineering dashboard + Slack
+* Warning → Monitoring dashboards
+* Info → Logs only
+
+---
+
+# Dashboarding
+
+## Required Dashboards
+
+### Payment Health Dashboard
+
+* Success/failure rates
+* Volume trends
+* Latency metrics
+
+---
+
+### Provider Health Dashboard
+
+* Per-PSP performance
+* Error rates
+* Response times
+
+---
+
+### System Health Dashboard
+
+* CPU, memory, DB load
+* Kafka lag
+* Service availability
+
+---
+
+### Business Dashboard
+
+* Revenue trends
+* Refund patterns
+* Payment distribution
+
+---
+
+# Summary
+
+Monitoring in the Payments Domain ensures:
+
+* Real-time visibility into financial operations
+* Early detection of system degradation
+* Full traceability of payment flows
+* Rapid incident response capability
+
+Without this layer, payments systems cannot operate safely at scale.
