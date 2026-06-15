@@ -1,0 +1,240 @@
+# Payments Domain – OpenAPI Specification (Contract Overview)
+
+---
+
+# Info
+
+## Title
+
+Payments Domain API
+
+## Description
+
+This API provides operations for initiating, processing, and querying client payments. It acts as the primary interface between upstream systems (Orders, Billing, Subscription) and the Payments Domain.
+
+The API is designed around idempotent, event-driven payment processing with strong consistency for commands and eventual consistency for status updates.
+
+## Version
+
+1.0.0
+
+## Contact
+
+Payments Platform Team
+
+---
+
+# Servers
+
+## Production
+
+* https://api.payments.company.com
+
+## Staging
+
+* https://staging-api.payments.company.com
+
+## Development
+
+* https://dev-api.payments.company.com
+
+---
+
+# Tags
+
+* Payments
+* Refunds
+* Payment Status
+* Reconciliation
+* Health
+
+---
+
+# Security
+
+## Authentication
+
+* OAuth2 Client Credentials Flow
+* API Key (service-to-service communication)
+
+## Authorization
+
+* Role-based access control (RBAC)
+* Domain-scoped permissions (Payments.read, Payments.write)
+
+## Security Requirements
+
+* All requests must use HTTPS
+* Sensitive data must not be exposed in responses or logs
+* Idempotency key required for all payment creation requests
+
+---
+
+# Component
+
+This API is implemented by the following internal component:
+
+## Payments API Service
+
+### Responsibilities
+
+* Accept payment initiation requests
+* Validate input and idempotency
+* Expose payment query endpoints
+* Delegate execution to Payment Processing Service
+* Publish payment events
+
+### Downstream Dependencies
+
+* Payment Processing Service
+* Payment Database
+* Event Streaming Platform
+
+---
+
+# Endpoints
+
+---
+
+## POST /payments
+
+### Description
+
+Create a new payment request.
+
+### Request Body
+
+* amount (decimal, required)
+* currency (string, required)
+* payerId (UUID, required)
+* payeeId (UUID, required)
+* idempotencyKey (string, required)
+
+### Responses
+
+* 201 Created → Payment created successfully
+* 200 OK → Existing payment returned (idempotency hit)
+* 400 Bad Request → Validation error
+* 409 Conflict → Duplicate inconsistent request
+
+---
+
+## GET /payments/{paymentId}
+
+### Description
+
+Retrieve payment details by ID.
+
+### Responses
+
+* 200 OK → Payment details returned
+* 404 Not Found → Payment does not exist
+
+---
+
+## GET /payments/{paymentId}/status
+
+### Description
+
+Retrieve current status of a payment.
+
+### Responses
+
+* 200 OK → Payment status returned
+* 404 Not Found → Payment does not exist
+
+---
+
+## POST /payments/{paymentId}/refunds
+
+### Description
+
+Initiate a refund for a completed payment.
+
+### Request Body
+
+* amount (decimal, optional for partial refund)
+* reason (string, required)
+
+### Responses
+
+* 202 Accepted → Refund initiated
+* 400 Bad Request → Invalid refund request
+* 409 Conflict → Refund not allowed for payment state
+
+---
+
+## GET /payments/{paymentId}/refunds
+
+### Description
+
+Retrieve refund history for a payment.
+
+### Responses
+
+* 200 OK → List of refunds
+* 404 Not Found → Payment does not exist
+
+---
+
+## POST /payments/reconcile
+
+### Description
+
+Trigger reconciliation process for external provider matching.
+
+### Responses
+
+* 202 Accepted → Reconciliation started
+* 403 Forbidden → Unauthorized access
+
+---
+
+## GET /health
+
+### Description
+
+Service health check endpoint.
+
+### Responses
+
+* 200 OK → Service healthy
+* 503 Service Unavailable → Service degraded
+
+---
+
+# External Docs
+
+## Domain Documentation
+
+* Payments Domain Overview
+* Payment Lifecycle Model
+* Business Rules (Payments Domain)
+* Ubiquitous Language
+
+## Architecture Documentation
+
+* C4 System Context
+* C4 Container Diagram
+* C4 Component Diagram
+* ADRs (Architecture Decision Records)
+
+## Event Contracts
+
+* PaymentCreated
+* PaymentCompleted
+* PaymentFailed
+* PaymentRefunded
+
+---
+
+# Summary
+
+This OpenAPI specification defines the external contract of the Payments Domain. It exposes a minimal, stable, and idempotent API surface designed for:
+
+* Payment initiation
+* Payment tracking
+* Refund handling
+* Reconciliation triggering
+
+The API is intentionally thin, delegating business complexity to internal domain services and maintaining strict separation between API layer and domain logic.
