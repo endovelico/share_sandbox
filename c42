@@ -1,0 +1,255 @@
+# Payments Domain – C4 Container View
+
+# Purpose
+
+This document describes the container-level architecture of the Payments Domain. It defines the major runtime components, their responsibilities, technologies, and how they interact with each other and external systems.
+
+Each container represents a deployable or independently scalable unit within the Payments Domain.
+
+---
+
+# Containers
+
+---
+
+## Payments API Service
+
+### Container ID
+
+PAYMENTS-API
+
+### Responsibilities
+
+* Accept payment initiation requests from upstream domains
+* Validate payment input and idempotency keys
+* Expose payment status query APIs
+* Orchestrate high-level payment workflows
+* Delegate execution to Payment Processing Service
+
+### Technologies
+
+* Java / Kotlin (Spring Boot or equivalent)
+* REST / gRPC APIs
+* JSON over HTTP
+* OpenAPI for contract definition
+
+### Interactions
+
+* Receives requests from Orders, Billing, Subscription Domains
+* Communicates with Payment Processing Service (sync)
+* Reads from Payment Database
+* Publishes events to Event Bus
+
+---
+
+## Payment Processing Service
+
+### Container ID
+
+PAYMENTS-PROCESSOR
+
+### Responsibilities
+
+* Execute payment transactions
+* Communicate with external Payment Service Providers (PSPs)
+* Handle retries and failure recovery
+* Manage payment state transitions
+* Create PaymentTransaction records
+
+### Technologies
+
+* Java / Kotlin
+* Message-driven architecture (Kafka consumers)
+* HTTP/gRPC for PSP communication
+* Resilience libraries (retry, circuit breaker)
+
+### Interactions
+
+* Consumes payment tasks from API Service or event bus
+* Communicates with external PSPs
+* Writes to Payment Database
+* Publishes Payment status events
+
+---
+
+## Payment Database
+
+### Container ID
+
+PAYMENTS-DB
+
+### Responsibilities
+
+* Store Payment, PaymentTransaction, Refund entities
+* Maintain payment lifecycle state
+* Provide audit-ready persistence layer
+* Support reconciliation queries
+
+### Technologies
+
+* PostgreSQL (primary option)
+* Optional read replicas for scaling
+* Partitioning for large-scale transaction data
+
+### Interactions
+
+* Used by API Service (reads/writes)
+* Used by Processing Service (writes)
+* Supports reconciliation jobs and reporting queries
+
+---
+
+## Event Streaming Platform
+
+### Container ID
+
+PAYMENTS-EVENT-BUS
+
+### Responsibilities
+
+* Enable asynchronous communication between domains
+* Publish payment lifecycle events
+* Decouple Payments Domain from consumers
+* Ensure reliable event delivery
+
+### Technologies
+
+* Apache Kafka (or equivalent)
+* Schema Registry (Avro / Protobuf / JSON Schema)
+* Event versioning strategy
+
+### Interactions
+
+* Receives events from API and Processing Services
+* Consumed by Notifications, Fraud, Reporting, Billing, Orders
+
+---
+
+## Reconciliation Service
+
+### Container ID
+
+PAYMENTS-RECONCILIATION
+
+### Responsibilities
+
+* Match internal payments with external provider records
+* Detect discrepancies and inconsistencies
+* Generate reconciliation reports
+* Trigger alerts for mismatches
+
+### Technologies
+
+* Batch processing framework (Spring Batch / Airflow / similar)
+* Scheduled jobs
+* Data processing pipelines
+
+### Interactions
+
+* Reads from Payment Database
+* Consumes external PSP reports
+* Writes reconciliation results
+* Publishes reconciliation events
+
+---
+
+## External Payment Provider Adapters
+
+### Container ID
+
+PAYMENTS-PROVIDERS-ADAPTERS
+
+### Responsibilities
+
+* Abstract communication with external PSPs
+* Normalize provider-specific APIs into internal format
+* Handle authentication and request transformation
+* Provide failover across providers
+
+### Technologies
+
+* HTTP clients
+* Provider SDKs (Stripe, Adyen, PayPal, etc.)
+* Resilience patterns (timeouts, retries, circuit breakers)
+
+### Interactions
+
+* Called by Payment Processing Service
+* Communicates with external PSP systems
+* Returns normalized responses
+
+---
+
+## Observability Stack
+
+### Container ID
+
+PAYMENTS-OBSERVABILITY
+
+### Responsibilities
+
+* Collect logs, metrics, and traces
+* Provide dashboards and alerting
+* Monitor system health and payment KPIs
+* Support incident investigation
+
+### Technologies
+
+* Prometheus (metrics)
+* Grafana (dashboards)
+* ELK / OpenSearch (logs)
+* OpenTelemetry (tracing)
+
+### Interactions
+
+* Instrumented by all other containers
+* Consumed by SRE and Operations teams
+
+---
+
+# Container Interactions Overview
+
+## Payment Initiation Flow
+
+1. Payments API Service receives request
+2. Validates and persists Payment
+3. Sends event or command to Processing Service
+4. Processing Service executes payment via PSP Adapters
+5. Result stored in Payment Database
+6. Events published to Event Bus
+
+---
+
+## Asynchronous Event Flow
+
+1. Processing Service emits PaymentUpdated events
+2. Event Bus distributes events
+3. Downstream systems consume events:
+
+   * Notifications
+   * Fraud Detection
+   * Reporting
+
+---
+
+## Reconciliation Flow
+
+1. Reconciliation Service reads Payment Database
+2. Fetches external provider data
+3. Matches transactions
+4. Stores reconciliation results
+5. Emits discrepancy events if needed
+
+---
+
+# Summary
+
+The Payments Domain is composed of clearly separated containers that isolate responsibilities:
+
+* API layer for request handling
+* Processing layer for execution
+* Persistence layer for state
+* Event-driven backbone for integration
+* Dedicated reconciliation and adapter layers for external systems
+
+This separation ensures scalability, resilience, and maintainability while supporting complex financial workflows.
