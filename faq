@@ -1,0 +1,270 @@
+# Payments Domain – FAQ
+
+# Purpose
+
+This FAQ provides quick answers to common questions about integrating with and operating the Payments Domain. It is organized by category and focuses on practical resolution steps rather than theory.
+
+---
+
+# Category: Payment Creation Issues
+
+## Introduction
+
+These questions relate to problems encountered when creating or initiating payments through the API.
+
+## Solution
+
+### Why was my payment request rejected?
+
+**Solution:**
+This usually occurs due to invalid request payloads or missing required fields. Ensure that:
+
+* `amount` is greater than zero
+* `currency` is a valid ISO 4217 code
+* `payerId` and `payeeId` are provided
+* `idempotencyKey` is included for all requests
+
+Check the response body for specific validation errors and correct the request accordingly.
+
+---
+
+### Why am I seeing duplicate payments?
+
+**Solution:**
+Duplicate payments occur when requests are retried without a consistent idempotency key.
+
+To resolve this:
+
+* Always reuse the same `idempotencyKey` for retries of the same business operation
+* Never generate a new key for retries
+* Query `GET /payments/{paymentId}` to confirm existing payment state
+
+---
+
+# Category: Payment Status & Lifecycle
+
+## Introduction
+
+These questions cover payment state behavior and lifecycle transitions.
+
+## Solution
+
+### Why is my payment stuck in Processing?
+
+**Solution:**
+A payment in `Processing` state usually indicates:
+
+* External payment provider delay
+* Asynchronous execution still in progress
+
+To resolve:
+
+* Check provider health status
+* Monitor event stream for `PaymentCompleted` or `PaymentFailed`
+* Use `GET /payments/{paymentId}` to poll status if needed
+
+---
+
+### Can a payment skip states like Initiated → Completed?
+
+**Solution:**
+No. Payments must follow a strict lifecycle.
+
+Valid transitions are enforced by the Payment State Machine:
+
+* Initiated → Processing → Completed
+* Initiated → Processing → Failed
+
+Any attempt to bypass states is rejected by the system.
+
+---
+
+# Category: Refunds
+
+## Introduction
+
+These questions relate to refund processing and constraints.
+
+## Solution
+
+### Why was my refund rejected?
+
+**Solution:**
+Refunds are rejected when business rules are violated. Common causes:
+
+* Payment is not in `Completed` state
+* Refund amount exceeds original payment amount
+* Payment is already fully refunded
+
+Ensure the original payment is valid and eligible before retrying.
+
+---
+
+### Can I partially refund a payment multiple times?
+
+**Solution:**
+Yes, partial refunds are supported.
+
+However:
+
+* The total sum of all refunds must not exceed the original payment amount
+* Each refund must be tracked independently
+* Refund state is recorded per transaction
+
+---
+
+# Category: Authentication & Access
+
+## Introduction
+
+These issues relate to API authentication and authorization failures.
+
+## Solution
+
+### Why am I getting a 401 Unauthorized error?
+
+**Solution:**
+This indicates missing or invalid authentication credentials.
+
+Fix by:
+
+* Ensuring `Authorization: Bearer <token>` is present
+* Checking token expiration
+* Refreshing OAuth credentials if needed
+
+---
+
+### Why am I getting a 403 Forbidden error?
+
+**Solution:**
+This means your credentials are valid but lack required permissions.
+
+To resolve:
+
+* Verify required scopes such as `Payments.read` or `Payments.write`
+* Contact system administrator to update permissions
+
+---
+
+# Category: Rate Limits & Performance
+
+## Introduction
+
+These questions address throttling and performance-related issues.
+
+## Solution
+
+### Why am I getting a 429 Too Many Requests?
+
+**Solution:**
+You have exceeded the allowed rate limit.
+
+To fix:
+
+* Implement exponential backoff (e.g., 1s → 2s → 4s → 8s)
+* Reduce request frequency
+* Prefer event-driven updates instead of polling
+
+---
+
+### Why is payment processing slow?
+
+**Solution:**
+Delays may be caused by:
+
+* External payment provider latency
+* High system load
+* Queue backlogs in processing services
+
+To investigate:
+
+* Check provider response metrics
+* Monitor Kafka lag
+* Review system performance dashboards
+
+---
+
+# Category: Events & Integration
+
+## Introduction
+
+These questions relate to event-driven integration and downstream system behavior.
+
+## Solution
+
+### Why am I not receiving payment events?
+
+**Solution:**
+This typically occurs due to:
+
+* Misconfigured event subscription
+* Kafka consumer lag
+* Network or connectivity issues
+
+To resolve:
+
+* Verify topic subscription configuration
+* Check consumer group health
+* Inspect event bus connectivity
+
+---
+
+### Are payment events guaranteed to be delivered exactly once?
+
+**Solution:**
+No. Events are delivered at-least-once.
+
+To handle this safely:
+
+* Use idempotent consumers
+* Deduplicate using `paymentId` or event ID
+* Ensure downstream systems are resilient to retries
+
+---
+
+# Category: System Behavior
+
+## Introduction
+
+These questions address expected system design behavior.
+
+## Solution
+
+### Why does the system use idempotency keys?
+
+**Solution:**
+Idempotency keys prevent duplicate payment creation when requests are retried.
+
+They ensure:
+
+* Exactly one payment is created per business action
+* Safe retry behavior in unstable network conditions
+* Consistency in distributed systems
+
+---
+
+### Can I directly modify a payment state?
+
+**Solution:**
+No. Payment state transitions are strictly controlled by the domain model.
+
+All state changes must:
+
+* Follow the Payment State Machine
+* Be triggered by valid processing flows
+* Be recorded via domain events
+
+Direct modification is not permitted.
+
+---
+
+# Summary
+
+This FAQ helps engineers and integrators quickly resolve common issues when working with the Payments Domain.
+
+For deeper debugging or system behavior, refer to:
+
+* Integration Guide
+* OpenAPI Specification
+* Monitoring & Observability Docs
+* Domain Model & State Machine Documentation
