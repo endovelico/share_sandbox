@@ -1,0 +1,267 @@
+# Payment Processing Service – C4 Component View
+
+# Purpose
+
+This document describes the internal components of the Payment Processing Service. It breaks down responsibilities, technologies, and interactions at the component level.
+
+The goal is to clarify how payment execution, provider integration, and state management are implemented internally.
+
+---
+
+# Components
+
+---
+
+## Payment Orchestrator
+
+### Responsibilities
+
+* Coordinates the end-to-end payment execution workflow
+* Drives payment state transitions
+* Delegates work to other components (routing, execution, persistence)
+* Ensures correct sequencing of payment lifecycle steps
+
+### Technologies
+
+* Java / Kotlin
+* Domain-driven service layer
+* Stateless orchestration logic
+
+### Interactions
+
+* Receives commands from Payment API Service
+* Calls Payment State Machine Engine
+* Invokes Provider Router
+* Persists results via Payment Repository
+* Emits events to Event Publisher
+
+---
+
+## Payment State Machine Engine
+
+### Responsibilities
+
+* Enforces valid payment lifecycle transitions
+* Validates state changes against domain rules
+* Prevents illegal or inconsistent state updates
+* Ensures deterministic state evolution
+
+### Technologies
+
+* Finite State Machine implementation
+* Domain model logic (pure business logic layer)
+
+### Interactions
+
+* Called by Payment Orchestrator
+* Reads current state from Payment Repository
+* Returns valid next state or rejection
+* Logs state transition events
+
+---
+
+## Provider Router
+
+### Responsibilities
+
+* Selects appropriate Payment Provider for execution
+* Applies routing rules (currency, region, availability, cost)
+* Supports failover between providers
+* Abstracts provider selection logic from business flow
+
+### Technologies
+
+* Rule engine (simple rules or configuration-based logic)
+* Config-driven routing policies
+
+### Interactions
+
+* Called by Payment Orchestrator
+* Queries Provider Registry
+* Passes selected provider to Execution Engine
+
+---
+
+## Payment Execution Engine
+
+### Responsibilities
+
+* Executes payment requests against external providers
+* Handles retries, timeouts, and transient failures
+* Normalizes provider responses into internal format
+* Ensures idempotent execution of payment requests
+
+### Technologies
+
+* HTTP/gRPC clients
+* Resilience patterns (retry, circuit breaker, timeout)
+* Provider SDK integrations
+
+### Interactions
+
+* Receives provider selection from Provider Router
+* Calls External Payment Provider Adapters
+* Sends results to State Machine Engine
+* Persists transaction results via Repository
+
+---
+
+## Payment Repository
+
+### Responsibilities
+
+* Persists Payment and PaymentTransaction entities
+* Provides transactional consistency
+* Supports read/write operations for payment lifecycle
+* Enables audit and reconciliation queries
+
+### Technologies
+
+* PostgreSQL
+* ORM (Hibernate / JPA or equivalent)
+* Optional caching layer (Redis)
+
+### Interactions
+
+* Used by Orchestrator
+* Used by State Machine Engine
+* Used by Execution Engine
+* Supports Reconciliation queries
+
+---
+
+## Idempotency Manager
+
+### Responsibilities
+
+* Ensures duplicate payment requests are safely handled
+* Prevents double-processing of identical requests
+* Maintains idempotency key registry
+* Returns existing payment for repeated requests
+
+### Technologies
+
+* Distributed cache (Redis) or DB constraint mechanism
+* Key-value storage model
+
+### Interactions
+
+* Called by Payment Orchestrator before processing begins
+* Interacts with Payment Repository
+* Blocks duplicate execution flows
+
+---
+
+## Event Publisher
+
+### Responsibilities
+
+* Publishes domain events for payment lifecycle changes
+* Ensures reliable event delivery
+* Formats events according to schema registry
+* Handles retry and failure scenarios for event emission
+
+### Technologies
+
+* Kafka producer
+* Schema Registry (Avro / JSON Schema / Protobuf)
+* OpenTelemetry integration (optional)
+
+### Interactions
+
+* Triggered by Orchestrator and State Machine Engine
+* Publishes to Event Bus container
+* Consumed by Notifications, Fraud, Reporting systems
+
+---
+
+## Provider Adapter Interface
+
+### Responsibilities
+
+* Defines unified interface for all external payment providers
+* Ensures consistent communication contract
+* Encapsulates provider-specific logic
+* Supports pluggable provider implementations
+
+### Technologies
+
+* Adapter pattern implementation
+* HTTP clients / SDK wrappers
+
+### Interactions
+
+* Called by Execution Engine
+* Connects to external PSP systems
+* Returns normalized response objects
+
+---
+
+## Retry & Resilience Manager
+
+### Responsibilities
+
+* Handles retry policies for transient failures
+* Applies exponential backoff strategies
+* Manages circuit breaker states
+* Prevents cascading failures in provider calls
+
+### Technologies
+
+* Resilience4j or equivalent library
+* Policy-based configuration
+
+### Interactions
+
+* Wraps Payment Execution Engine calls
+* Monitors Provider Adapter responses
+* Feeds failure data into Orchestrator
+
+---
+
+# Component Interaction Flow
+
+## Payment Execution Flow
+
+1. Payment Orchestrator receives payment command
+2. Idempotency Manager checks for duplicates
+3. State Machine Engine validates initial state
+4. Provider Router selects provider
+5. Execution Engine calls Provider Adapter
+6. Retry Manager handles failures if needed
+7. State Machine updates payment status
+8. Repository persists changes
+9. Event Publisher emits Payment events
+
+---
+
+## Failure Handling Flow
+
+1. Execution Engine receives failure from provider
+2. Retry Manager evaluates retry eligibility
+3. If retryable → re-execution triggered
+4. If not retryable → State Machine marks payment as Failed
+5. Event Publisher emits PaymentFailed event
+
+---
+
+## Idempotent Request Flow
+
+1. Orchestrator receives payment request
+2. Idempotency Manager checks key
+3. If exists → return existing Payment
+4. If not → continue normal execution flow
+
+---
+
+# Summary
+
+The Payment Processing Service is composed of clearly separated components that enforce:
+
+* Deterministic state transitions
+* Provider abstraction and isolation
+* Resilient execution under failure conditions
+* Strict idempotency guarantees
+* Event-driven communication
+
+This design ensures that the most complex part of the Payments Domain remains maintainable, testable, and scalable.
