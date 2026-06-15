@@ -1,0 +1,260 @@
+# Payments Domain – Integration Guide
+
+# Purpose
+
+This document provides guidance for systems integrating with the Payments Domain API. It covers authentication, data mapping, retry behavior, failure handling, and rate limiting.
+
+It is intended for engineering teams integrating upstream systems such as Orders, Billing, and Subscription services.
+
+---
+
+# Authentication
+
+All requests to the Payments Domain API must be authenticated.
+
+## Supported Methods
+
+### OAuth2 Client Credentials
+
+* Recommended method for service-to-service communication
+* Access tokens must be included in the `Authorization` header
+
+```
+Authorization: Bearer <access_token>
+```
+
+### API Key Authentication (Legacy / Internal Use Only)
+
+```
+X-API-Key: <api_key>
+```
+
+## Requirements
+
+* Tokens must be valid and unexpired
+* Permissions must match required scopes (e.g., Payments.write, Payments.read)
+* Authentication failures result in `401 Unauthorized`
+
+---
+
+# Mapping
+
+This section defines how external system data maps to the Payments Domain model.
+
+## Payment Request Mapping
+
+| External Field | Payment Domain Field |
+| -------------- | -------------------- |
+| orderId        | clientReferenceId    |
+| totalAmount    | amount               |
+| currencyCode   | currency             |
+| customerId     | payerId              |
+| merchantId     | payeeId              |
+
+---
+
+## Status Mapping
+
+| External Status | Internal Payment Status |
+| --------------- | ----------------------- |
+| CREATED         | Initiated               |
+| PENDING         | Pending                 |
+| SUCCESS         | Completed               |
+| FAILED          | Failed                  |
+| REFUNDED        | Refunded                |
+
+---
+
+## Event Mapping
+
+| External Event    | Domain Event     |
+| ----------------- | ---------------- |
+| payment.created   | PaymentCreated   |
+| payment.completed | PaymentCompleted |
+| payment.failed    | PaymentFailed    |
+
+---
+
+# Retries
+
+Payments operations must be treated as **idempotent and retry-safe**.
+
+## Client Retry Policy
+
+* Retry only on network errors or 5xx responses
+* Do NOT retry on 4xx validation errors
+* Use exponential backoff strategy:
+
+  * 1s → 2s → 4s → 8s → max 30s
+
+## Idempotency Requirements
+
+* All `POST /payments` requests must include `idempotencyKey`
+* Same key guarantees same result
+* Missing idempotency key may result in duplicate payments (rejected)
+
+## Recommended Retry Behavior
+
+* Maximum retry attempts: 5
+* Retry timeout: 30 seconds total budget
+* Ensure deduplication on client side where possible
+
+---
+
+# Failure Modes
+
+The Payments Domain is designed to fail safely and predictably.
+
+## Common Failure Scenarios
+
+### 400 Bad Request
+
+* Invalid request payload
+* Missing required fields
+* Invalid currency or amount
+
+**Action:** Do not retry. Fix request.
+
+---
+
+### 401 Unauthorized
+
+* Missing or invalid authentication token
+
+**Action:** Refresh token and retry.
+
+---
+
+### 403 Forbidden
+
+* Insufficient permissions
+
+**Action:** Contact system administrator. Do not retry.
+
+---
+
+### 404 Not Found
+
+* Payment does not exist
+
+**Action:** Verify payment ID.
+
+---
+
+### 409 Conflict
+
+* Duplicate request with conflicting data
+* Invalid state transition
+
+**Action:** Retrieve existing payment instead of retrying blindly.
+
+---
+
+### 422 Unprocessable Entity
+
+* Business rule violation (e.g., refund on non-completed payment)
+
+**Action:** Correct business logic before retrying.
+
+---
+
+### 429 Too Many Requests
+
+* Rate limit exceeded
+
+**Action:** Apply backoff and retry after delay.
+
+---
+
+### 500 Internal Server Error
+
+* Unexpected system failure
+
+**Action:** Retry with exponential backoff.
+
+---
+
+### 503 Service Unavailable
+
+* System degraded or external provider failure
+
+**Action:** Retry later; check system status.
+
+---
+
+## Provider-Induced Failures
+
+* Payment provider timeout
+* Provider rejection
+* Network partition between PSP and Payments Domain
+
+**Handling Strategy:**
+
+* Mark payment as Pending or Failed depending on state
+* Trigger retry workflow if eligible
+* Emit failure events for downstream systems
+
+---
+
+# Rate Limits
+
+The Payments Domain enforces rate limits to ensure system stability.
+
+## Global Limits
+
+* 1000 requests per second per client (default)
+* Burst allowance up to 2000 requests
+
+---
+
+## Per-Endpoint Limits
+
+| Endpoint       | Limit        |
+| -------------- | ------------ |
+| POST /payments | 200 req/sec  |
+| GET /payments  | 500 req/sec  |
+| POST /refunds  | 100 req/sec  |
+| GET /status    | 1000 req/sec |
+
+---
+
+## Rate Limit Headers
+
+All responses include:
+
+```
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+```
+
+---
+
+## Behavior on Exceeding Limits
+
+* Returns `429 Too Many Requests`
+* Includes retry-after header
+* Requests must be retried using exponential backoff
+
+---
+
+## Best Practices
+
+* Implement client-side throttling
+* Use batching where possible
+* Avoid aggressive polling of payment status
+* Prefer event-driven updates over repeated GET calls
+
+---
+
+# Summary
+
+Integration with the Payments Domain requires careful handling of:
+
+* Secure authentication
+* Strict idempotency rules
+* Controlled retry behavior
+* Structured failure handling
+* Respect for rate limits
+
+Systems that follow these guidelines will achieve reliable, predictable integration with minimal operational issues.
