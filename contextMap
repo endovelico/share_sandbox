@@ -1,0 +1,222 @@
+# System Context Map – Payments Domain
+
+# Purpose
+
+This document describes how the Payments Domain fits into the broader system landscape. It defines bounded contexts, relationships between domains, communication patterns, and integration styles.
+
+It ensures consistent understanding of system interactions and prevents tight coupling between domains.
+
+---
+
+# Context Names
+
+This section defines the bounded contexts interacting with the Payments Domain.
+
+## Core Domains
+
+* Payments Domain (this context)
+* Orders Domain
+* Customer Domain
+* Billing Domain
+* Subscription Domain
+
+## Supporting Domains
+
+* Notifications Domain
+* Fraud Detection Domain
+* Reporting & Analytics Domain
+
+## External Systems
+
+* Payment Service Providers (PSPs)
+* Banking Systems
+* ERP Systems
+* Identity Providers (IdP)
+
+---
+
+# Relationships
+
+## Payments ↔ Orders
+
+* Relationship: Downstream dependency (Orders → Payments initiation)
+* Description: Orders initiate payment requests and depend on payment confirmation for fulfillment.
+
+---
+
+## Payments ↔ Billing
+
+* Relationship: Upstream/Downstream (bi-directional integration)
+* Description: Billing may trigger payments, and Payments provides settlement results.
+
+---
+
+## Payments ↔ Customer
+
+* Relationship: Reference dependency
+* Description: Payments references customer identity but does not own customer data.
+
+---
+
+## Payments ↔ Subscription
+
+* Relationship: Downstream dependency
+* Description: Subscription domain triggers recurring payment execution.
+
+---
+
+## Payments ↔ Notifications
+
+* Relationship: Event-driven consumer
+* Description: Notifications listens to payment events to inform users of payment status changes.
+
+---
+
+## Payments ↔ Fraud Detection
+
+* Relationship: Event-driven analytical dependency
+* Description: Fraud systems consume payment events for risk scoring and anomaly detection.
+
+---
+
+## Payments ↔ External Payment Providers
+
+* Relationship: Integration dependency
+* Description: Payments interacts with external PSPs for execution and settlement.
+
+---
+
+## Payments ↔ Reporting & Analytics
+
+* Relationship: Data consumer
+* Description: Reporting systems consume payment events and records for business intelligence.
+
+---
+
+# Communication Patterns
+
+## Synchronous Communication
+
+Used when immediate response is required.
+
+### Examples
+
+* Payment initiation request
+* Payment validation checks
+* Provider authorization calls
+
+### Characteristics
+
+* REST or gRPC APIs
+* Low latency requirement
+* Strong consistency expectations
+
+---
+
+## Asynchronous Communication
+
+Used for decoupled and scalable interactions.
+
+### Examples
+
+* Payment status updates
+* Payment completion events
+* Refund notifications
+
+### Characteristics
+
+* Event-driven messaging (Kafka or similar)
+* Eventually consistent
+* High scalability and resilience
+
+---
+
+## Event-Driven Communication
+
+Core pattern for cross-domain integration.
+
+### Events Published
+
+* PaymentCreated
+* PaymentAuthorized
+* PaymentProcessing
+* PaymentCompleted
+* PaymentFailed
+* PaymentRefunded
+
+### Consumers
+
+* Notifications
+* Fraud Detection
+* Reporting
+* Analytics
+* Customer Support Tools
+
+---
+
+## Request-Response Pattern
+
+Used primarily for internal or external service calls.
+
+### Examples
+
+* Provider payment execution
+* Payment status query
+* Idempotency validation checks
+
+---
+
+# Integration Styles
+
+## REST APIs
+
+* Used for external system communication
+* Standard for payment initiation and queries
+* Stateless and request-driven
+
+---
+
+## Event Streaming (Kafka or equivalent)
+
+* Primary integration backbone for domain events
+* Used for propagation of payment state changes
+* Enables loose coupling between domains
+
+---
+
+## Webhooks
+
+* Used for external PSP callbacks
+* Asynchronous provider notifications
+* Requires idempotency handling
+
+---
+
+## gRPC (Internal)
+
+* Used for high-performance internal service communication
+* Low-latency payment orchestration calls
+* Strongly typed contracts
+
+---
+
+## Batch Processing
+
+* Used for reconciliation workflows
+* Settlement matching with external providers
+* Reporting data synchronization
+
+---
+
+## Database Integration (Avoided)
+
+* Direct database access across domains is strictly prohibited
+* All interactions must go through APIs or events
+
+---
+
+# Summary
+
+The Payments Domain operates as a central orchestration and reconciliation hub within the system landscape. It relies on a combination of synchronous APIs for execution-critical flows and asynchronous event-driven communication for scalability, resilience, and cross-domain consistency.
+
+Clear separation of contexts and strict integration boundaries ensure the domain remains loosely coupled, observable, and evolvable over time.
