@@ -1,0 +1,273 @@
+# Payments Domain – User Guide
+
+# Title
+
+Payments Domain User Guide – Payment Initiation and Management
+
+---
+
+# Pre-requisites
+
+Before using the Payments Domain API, ensure the following requirements are met:
+
+## Access Requirements
+
+* Valid API credentials (OAuth2 client or API key)
+* Required permissions:
+
+  * `Payments.write` for creating payments
+  * `Payments.read` for querying payments
+* Network access to Payments API endpoints
+
+---
+
+## Technical Requirements
+
+* HTTPS-enabled client
+* Ability to generate and store unique idempotency keys
+* JSON-capable HTTP client (e.g., cURL, Postman, SDK)
+
+---
+
+## Conceptual Understanding
+
+Users should understand:
+
+* Payment lifecycle (Initiated → Processing → Completed/Failed)
+* Idempotency behavior
+* Asynchronous event-driven updates
+
+---
+
+# Step by Step Guide
+
+---
+
+## Step 1: Authenticate Request
+
+Obtain an access token or API key and include it in all requests.
+
+```http
+Authorization: Bearer <access_token>
+```
+
+---
+
+## Step 2: Create a Payment
+
+Send a payment creation request to initiate processing.
+
+### Example Request
+
+```bash
+POST /payments
+```
+
+```json
+{
+  "amount": 100.00,
+  "currency": "EUR",
+  "payerId": "12345",
+  "payeeId": "67890",
+  "idempotencyKey": "order-12345-payment"
+}
+```
+
+---
+
+## Step 3: Receive Payment Response
+
+### Possible Responses
+
+* `201 Created` → Payment successfully created
+* `200 OK` → Existing payment returned (idempotency hit)
+
+Example:
+
+```json
+{
+  "paymentId": "pay_abc123",
+  "status": "Initiated",
+  "amount": 100.00,
+  "currency": "EUR"
+}
+```
+
+---
+
+## Step 4: Track Payment Status
+
+Query payment status using the payment ID.
+
+```bash
+GET /payments/{paymentId}/status
+```
+
+Example response:
+
+```json
+{
+  "paymentId": "pay_abc123",
+  "status": "Processing"
+}
+```
+
+---
+
+## Step 5: Handle Completion or Failure
+
+Payments will transition asynchronously.
+
+### Final States:
+
+* Completed
+* Failed
+
+You may:
+
+* Poll status endpoint
+* Or subscribe to payment events (recommended)
+
+---
+
+## Step 6: Initiate Refund (Optional)
+
+```bash
+POST /payments/{paymentId}/refunds
+```
+
+```json
+{
+  "amount": 50.00,
+  "reason": "Customer request"
+}
+```
+
+---
+
+## Step 7: Monitor Events (Recommended)
+
+Subscribe to event stream:
+
+* PaymentCreated
+* PaymentCompleted
+* PaymentFailed
+* PaymentRefunded
+
+---
+
+# Troubleshooting
+
+---
+
+## Issue: Payment Not Created
+
+### Possible Causes
+
+* Missing authentication
+* Invalid request payload
+* Missing idempotency key
+
+### Resolution
+
+* Ensure Authorization header is present
+* Validate JSON schema
+* Always include `idempotencyKey`
+
+---
+
+## Issue: Duplicate Payments
+
+### Cause
+
+* Retry without idempotency key
+
+### Resolution
+
+* Use consistent idempotency key per business transaction
+* Check existing payment via GET endpoint
+
+---
+
+## Issue: Payment Stuck in Processing
+
+### Cause
+
+* External Payment Provider delay
+* Asynchronous processing backlog
+
+### Resolution
+
+* Check provider status
+* Query payment status periodically
+* Monitor event stream
+
+---
+
+## Issue: Refund Rejected
+
+### Cause
+
+* Payment not in Completed state
+* Refund amount exceeds original payment
+
+### Resolution
+
+* Verify payment status first
+* Adjust refund amount to valid range
+
+---
+
+## Issue: 429 Too Many Requests
+
+### Cause
+
+* Rate limit exceeded
+
+### Resolution
+
+* Implement exponential backoff
+* Reduce request frequency
+* Use event-driven updates instead of polling
+
+---
+
+## Issue: Authentication Failure
+
+### Cause
+
+* Expired or invalid token
+* Insufficient permissions
+
+### Resolution
+
+* Refresh OAuth token
+* Verify API key scopes
+
+---
+
+## Issue: Missing Payment Updates
+
+### Cause
+
+* Event consumer not configured
+* Kafka lag or downtime
+
+### Resolution
+
+* Check event subscription
+* Monitor Kafka lag metrics
+* Use status polling as fallback
+
+---
+
+# Summary
+
+This guide provides everything needed to:
+
+* Create payments
+* Track payment lifecycle
+* Handle refunds
+* Debug common integration issues
+
+For production systems, event-driven consumption is strongly recommended over polling to ensure real-time updates and reduced API load.
