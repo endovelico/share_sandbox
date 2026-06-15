@@ -1,0 +1,169 @@
+# Payments Domain – User Stories
+
+# Purpose
+
+This document defines user stories for the Payments Domain in a structured format that connects business needs to domain concepts, rules, and acceptance criteria.
+
+Each story ensures traceability from user value → domain behavior → business rules.
+
+---
+
+# User Stories
+
+---
+
+## US-001: Create a Payment
+
+| Field          | Content                                               |
+| -------------- | ----------------------------------------------------- |
+| User Story ID  | US-001                                                |
+| Role           | Orders System / Billing System                        |
+| Capability     | Initiate a payment request                            |
+| Value          | Ensure clients can pay for services or goods reliably |
+| Domain Concept | Payment, PaymentIntent                                |
+| Business Rules | RULE-001, RULE-002, RULE-005                          |
+
+### Acceptance Criteria
+
+* A payment can be created with a valid amount and currency.
+* A unique payment ID is generated.
+* Duplicate requests with the same idempotency key do not create multiple payments.
+* Payment is initially stored in “Initiated” state.
+* Payment creation emits a PaymentCreated event.
+
+---
+
+## US-002: Process a Payment
+
+| Field          | Content                                                |
+| -------------- | ------------------------------------------------------ |
+| User Story ID  | US-002                                                 |
+| Role           | Payments Domain (System)                               |
+| Capability     | Execute payment through external provider              |
+| Value          | Ensure payments are successfully processed and settled |
+| Domain Concept | PaymentTransaction, PaymentProvider                    |
+| Business Rules | RULE-006, RULE-011, RULE-012                           |
+
+### Acceptance Criteria
+
+* Payment is sent to a valid payment provider.
+* Only one provider is used per transaction attempt.
+* Provider response is recorded in a PaymentTransaction.
+* Payment status is updated based on provider response.
+* PaymentCompleted or PaymentFailed event is emitted accordingly.
+
+---
+
+## US-003: Handle Payment Failure
+
+| Field          | Content                                      |
+| -------------- | -------------------------------------------- |
+| User Story ID  | US-003                                       |
+| Role           | Payment Provider / Payments System           |
+| Capability     | Record and manage failed payments            |
+| Value          | Ensure failures are traceable and actionable |
+| Domain Concept | Payment, PaymentStatus                       |
+| Business Rules | RULE-010, RULE-015                           |
+
+### Acceptance Criteria
+
+* Failed payment attempts are recorded with a failure reason.
+* Payment status is set to Failed.
+* PaymentFailed event is emitted.
+* Failure is visible for support and reconciliation.
+
+---
+
+## US-004: Refund a Payment
+
+| Field          | Content                                                  |
+| -------------- | -------------------------------------------------------- |
+| User Story ID  | US-004                                                   |
+| Role           | Customer Support / Finance Team                          |
+| Capability     | Reverse a completed payment                              |
+| Value          | Allow correction of payments and customer reimbursements |
+| Domain Concept | Refund, Payment                                          |
+| Business Rules | RULE-008, RULE-009                                       |
+
+### Acceptance Criteria
+
+* Refund can only be created for completed payments.
+* Refund amount cannot exceed original payment amount.
+* Partial refunds are supported.
+* Refund status is tracked independently.
+* PaymentRefunded event is emitted.
+
+---
+
+## US-005: Query Payment Status
+
+| Field          | Content                                   |
+| -------------- | ----------------------------------------- |
+| User Story ID  | US-005                                    |
+| Role           | Customer Support / Orders System          |
+| Capability     | Retrieve payment status                   |
+| Value          | Provide visibility into payment lifecycle |
+| Domain Concept | Payment                                   |
+| Business Rules | RULE-013                                  |
+
+### Acceptance Criteria
+
+* Payment status can be retrieved by payment ID.
+* Returned status reflects latest known state.
+* No state mutation occurs during query.
+* Includes metadata such as timestamps and provider reference.
+
+---
+
+## US-006: Reconcile Payments
+
+| Field          | Content                                      |
+| -------------- | -------------------------------------------- |
+| User Story ID  | US-006                                       |
+| Role           | Finance Team                                 |
+| Capability     | Match internal and external payment records  |
+| Value          | Ensure financial correctness and consistency |
+| Domain Concept | PaymentTransaction, PaymentProvider          |
+| Business Rules | RULE-013, RULE-010                           |
+
+### Acceptance Criteria
+
+* External provider data can be ingested.
+* Payments are matched against provider records.
+* Discrepancies are identified and logged.
+* Reconciliation results are auditable.
+* Alerts are generated for mismatches.
+
+---
+
+## US-007: Prevent Duplicate Payment Processing
+
+| Field          | Content                                                 |
+| -------------- | ------------------------------------------------------- |
+| User Story ID  | US-007                                                  |
+| Role           | Payments System                                         |
+| Capability     | Ensure idempotent payment creation and processing       |
+| Value          | Prevent financial inconsistencies and duplicate charges |
+| Domain Concept | Payment, IdempotencyKey                                 |
+| Business Rules | RULE-005                                                |
+
+### Acceptance Criteria
+
+* Requests with the same idempotency key return the same payment.
+* No duplicate transactions are created.
+* System state remains consistent under retries.
+* Duplicate requests are logged for observability.
+
+---
+
+# Summary
+
+The Payments Domain user stories define the functional expectations of the system in a structured and traceable way. Each story connects:
+
+* Business value
+* System behavior
+* Domain model concepts
+* Business rules
+* Acceptance criteria
+
+Together, they ensure alignment between product intent and technical implementation.
