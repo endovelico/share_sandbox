@@ -1,0 +1,309 @@
+# Payments Domain – Local Setup Guide
+
+# Purpose
+
+This document explains how to set up and run the Payments Domain locally. It covers required tools, environment configuration, bootstrapping steps, and common issues encountered during setup.
+
+The goal is to enable developers to run the full Payments stack in a local environment that closely mirrors production behavior.
+
+---
+
+# Prerequisites
+
+Before starting, ensure the following tools are installed:
+
+## Required Tools
+
+* Java 17+ (or Kotlin-compatible JDK)
+* Maven or Gradle build tool
+* Docker & Docker Compose
+* Git
+* cURL or Postman (for API testing)
+
+## Optional Tools
+
+* Kafka UI (for event inspection)
+* PostgreSQL client (e.g., DBeaver, pgAdmin)
+* IDE (IntelliJ IDEA recommended)
+
+## Infrastructure Dependencies
+
+The Payments Domain depends on the following local services:
+
+* PostgreSQL (Payments database)
+* Kafka (event streaming)
+* Redis (idempotency / caching layer)
+* Mock Payment Provider service (for PSP simulation)
+
+---
+
+# Environment Variables
+
+The following environment variables must be configured before running the service.
+
+## Core Configuration
+
+| Variable      | Description                  | Example                                     |
+| ------------- | ---------------------------- | ------------------------------------------- |
+| `APP_ENV`     | Runtime environment          | `local`                                     |
+| `SERVER_PORT` | API service port             | `8080`                                      |
+| `DB_URL`      | PostgreSQL connection string | `jdbc:postgresql://localhost:5432/payments` |
+| `DB_USER`     | Database username            | `payments_user`                             |
+| `DB_PASSWORD` | Database password            | `password`                                  |
+
+---
+
+## Kafka Configuration
+
+| Variable               | Description            | Example           |
+| ---------------------- | ---------------------- | ----------------- |
+| `KAFKA_BROKERS`        | Kafka broker addresses | `localhost:9092`  |
+| `KAFKA_TOPIC_PAYMENTS` | Payment events topic   | `payments-events` |
+
+---
+
+## Redis Configuration
+
+| Variable     | Description | Example     |
+| ------------ | ----------- | ----------- |
+| `REDIS_HOST` | Redis host  | `localhost` |
+| `REDIS_PORT` | Redis port  | `6379`      |
+
+---
+
+## Payment Provider Configuration
+
+| Variable         | Description            | Example                 |
+| ---------------- | ---------------------- | ----------------------- |
+| `PSP_MOCK_URL`   | Mock provider endpoint | `http://localhost:9000` |
+| `PSP_TIMEOUT_MS` | Provider timeout       | `3000`                  |
+
+---
+
+## Security (Local Only)
+
+| Variable        | Description                    | Example |
+| --------------- | ------------------------------ | ------- |
+| `AUTH_DISABLED` | Disable auth for local testing | `true`  |
+
+---
+
+# Bootstrapping Steps
+
+Follow these steps to run the Payments Domain locally.
+
+---
+
+## Step 1: Clone Repository
+
+```bash
+git clone https://github.com/company/payments-domain.git
+cd payments-domain
+```
+
+---
+
+## Step 2: Start Infrastructure Services
+
+Use Docker Compose to start dependencies:
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+
+* PostgreSQL
+* Kafka
+* Redis
+* Mock Payment Provider
+
+---
+
+## Step 3: Run Database Migrations
+
+```bash
+./gradlew flywayMigrate
+```
+
+or
+
+```bash
+mvn flyway:migrate
+```
+
+---
+
+## Step 4: Start Payments Service
+
+```bash
+./gradlew bootRun
+```
+
+or
+
+```bash
+mvn spring-boot:run
+```
+
+---
+
+## Step 5: Verify Service Health
+
+```bash
+curl http://localhost:8080/health
+```
+
+Expected response:
+
+```json
+{
+  "status": "UP"
+}
+```
+
+---
+
+## Step 6: Test Payment Creation
+
+```bash
+curl -X POST http://localhost:8080/payments \
+-H "Content-Type: application/json" \
+-d '{
+  "amount": 100.00,
+  "currency": "EUR",
+  "payerId": "123",
+  "payeeId": "456",
+  "idempotencyKey": "test-001"
+}'
+```
+
+---
+
+## Step 7: View Events (Optional)
+
+Use Kafka UI or CLI to inspect events:
+
+```bash
+kafka-console-consumer --topic payments-events --from-beginning
+```
+
+---
+
+# Common Failures
+
+---
+
+## Issue: Database Connection Refused
+
+### Cause
+
+PostgreSQL container is not running or misconfigured.
+
+### Fix
+
+```bash
+docker-compose ps
+docker-compose restart postgres
+```
+
+---
+
+## Issue: Kafka Connection Failed
+
+### Cause
+
+Kafka broker not ready or incorrect broker URL.
+
+### Fix
+
+Ensure Kafka is running:
+
+```bash
+docker-compose up kafka
+```
+
+Check `KAFKA_BROKERS` variable.
+
+---
+
+## Issue: Payment Provider Timeout
+
+### Cause
+
+Mock PSP service is not running or unreachable.
+
+### Fix
+
+```bash
+docker-compose up mock-psp
+```
+
+Verify:
+
+```bash
+curl http://localhost:9000/health
+```
+
+---
+
+## Issue: Duplicate Payments Created
+
+### Cause
+
+Missing or incorrect idempotency key.
+
+### Fix
+
+Always include:
+
+```json
+"idempotencyKey": "unique-value"
+```
+
+---
+
+## Issue: Event Not Published
+
+### Cause
+
+Kafka topic not created or misconfigured.
+
+### Fix
+
+Manually create topic:
+
+```bash
+kafka-topics --create --topic payments-events --bootstrap-server localhost:9092
+```
+
+---
+
+## Issue: Service Starts but API Fails
+
+### Cause
+
+Missing environment variables or invalid DB credentials.
+
+### Fix
+
+Verify `.env` or environment configuration:
+
+```bash
+env | grep DB_
+```
+
+---
+
+# Summary
+
+The Payments Domain local environment is designed to replicate production-like behavior using containerized infrastructure.
+
+A successful setup requires:
+
+* Running infrastructure dependencies via Docker
+* Proper environment configuration
+* Database migrations applied
+* Payment service startup verification
+
+Once running, developers can simulate full payment flows, including event emission and provider interaction.
