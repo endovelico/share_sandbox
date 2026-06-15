@@ -1,0 +1,229 @@
+# Payments Domain – C4 System Context
+
+# Purpose
+
+This document defines the system context of the Payments Domain using the C4 model. It describes external users, external systems, trust boundaries, and key interactions at a high level.
+
+The goal is to clarify how the Payments Domain fits into the broader ecosystem and where system responsibilities begin and end.
+
+---
+
+# External Users
+
+These are human actors interacting directly or indirectly with the Payments Domain.
+
+## End Customers
+
+* Initiate purchases or payment-related actions via client-facing systems.
+* Expect reliable, fast, and secure payment processing.
+* Do not interact directly with the Payments Domain.
+
+---
+
+## Customer Support Agents
+
+* Investigate payment issues and disputes.
+* Query payment status and history.
+* Trigger refunds or corrective actions.
+
+---
+
+## Finance & Accounting Teams
+
+* Monitor payment flows and reconciliation results.
+* Ensure financial accuracy and regulatory compliance.
+* Use payment data for reporting and audits.
+
+---
+
+## Product Managers
+
+* Define payment-related features and workflows.
+* Monitor payment performance and success metrics.
+* Influence payment behavior through requirements.
+
+---
+
+## Operations / SRE Engineers
+
+* Monitor system health and payment processing performance.
+* Respond to incidents and system alerts.
+* Maintain system availability and reliability.
+
+---
+
+# External Systems
+
+These systems interact with the Payments Domain but are outside its ownership boundary.
+
+## Orders Domain
+
+* Initiates payment requests when an order is placed.
+* Depends on payment confirmation to complete order lifecycle.
+
+---
+
+## Billing Domain
+
+* Triggers payments for invoices and recurring charges.
+* Consumes payment status updates for billing reconciliation.
+
+---
+
+## Subscription Domain
+
+* Initiates recurring payment workflows.
+* Monitors payment success/failure for subscription lifecycle management.
+
+---
+
+## Notifications Domain
+
+* Consumes payment events.
+* Sends user notifications for payment status changes.
+
+---
+
+## Fraud Detection System
+
+* Consumes payment events for risk scoring.
+* May flag transactions for review or blocking.
+
+---
+
+## Reporting & Analytics Systems
+
+* Consumes payment events and historical data.
+* Generates financial and operational reports.
+
+---
+
+## Payment Service Providers (PSPs)
+
+* Execute actual financial transactions.
+* Return authorization, settlement, and failure responses.
+* Examples include Stripe, Adyen, PayPal (provider-agnostic abstraction).
+
+---
+
+## Banking Systems
+
+* Participate in fund settlement and clearing.
+* Provide confirmation of financial transfers.
+
+---
+
+## Identity Provider (IdP)
+
+* Provides authentication and identity validation.
+* Ensures secure access to payment-related operations (indirect dependency).
+
+---
+
+# Trust Boundaries
+
+Trust boundaries define where data or control transitions between systems with different levels of trust.
+
+## Internal Trust Boundary
+
+Within the Payments Domain:
+
+* Payment orchestration logic
+* Domain state management
+* Event generation
+* Internal APIs
+
+All components inside this boundary are fully trusted.
+
+---
+
+## Organizational Boundary
+
+Between internal domains:
+
+* Orders, Billing, Subscription, Customer, Notifications
+
+Trust is partial:
+
+* Communication is authenticated and validated
+* Data is exchanged via APIs or events only
+* No shared database access is permitted
+
+---
+
+## External Provider Boundary
+
+Between Payments Domain and external PSPs/banks:
+
+* Highest risk boundary
+* All data must be validated and sanitized
+* External responses are not trusted as authoritative
+* Idempotency and retry mechanisms are required
+
+---
+
+## User Interaction Boundary
+
+Between external users and client systems:
+
+* Users never interact directly with the Payments Domain
+* All interactions are mediated through upstream systems (e.g., Orders, Billing)
+
+---
+
+# Key Interactions
+
+## Payment Initiation Flow
+
+1. Orders or Billing Domain sends a payment request.
+2. Payments Domain validates request.
+3. Payment is created internally.
+4. Payment event is published.
+
+---
+
+## Payment Processing Flow
+
+1. Payments Domain selects a Payment Provider.
+2. Request is sent to external PSP.
+3. Provider returns response (sync or async).
+4. PaymentTransaction is recorded.
+5. Payment state is updated.
+
+---
+
+## Payment Event Distribution
+
+1. Payment state changes occur.
+2. Domain event is emitted.
+3. Events are consumed by:
+
+   * Notifications
+   * Fraud Detection
+   * Reporting Systems
+
+---
+
+## Refund Flow
+
+1. Finance or Support initiates refund request.
+2. Payments Domain validates eligibility.
+3. Refund is executed via provider.
+4. Refund state is recorded and emitted.
+
+---
+
+## Reconciliation Flow
+
+1. External provider sends or exposes transaction data.
+2. Payments Domain ingests data.
+3. Internal records are matched.
+4. Discrepancies are flagged or corrected.
+
+---
+
+# Summary
+
+The Payments Domain operates as a **central financial orchestration system** within a larger ecosystem of business, operational, and external financial systems.
+
+It is deliberately designed with strict trust boundaries, asynchronous communication patterns, and clear separation from upstream business logic and downstream financial execution systems.
