@@ -1,0 +1,253 @@
+# Payments Domain – Coding Standards
+
+# Purpose
+
+This document defines the mandatory coding standards for all contributions to the Payments Domain. It ensures consistency, readability, maintainability, and correctness across all services and modules.
+
+All code must comply with these standards before being merged.
+
+---
+
+# Naming Conventions
+
+## General Rules
+
+* Use **clear, domain-driven names** (prefer business terms over technical abbreviations)
+* Avoid ambiguous or generic names like `data`, `info`, `manager`, `handler`
+* Names must reflect intent, not implementation
+
+---
+
+## Classes
+
+* Use **PascalCase**
+* Must represent domain concepts or behaviors
+
+Examples:
+
+* `Payment`
+* `PaymentProcessor`
+* `PaymentStateMachine`
+
+---
+
+## Methods
+
+* Use **camelCase**
+* Must be **verb-based**
+
+Examples:
+
+* `createPayment()`
+* `processPayment()`
+* `validatePaymentState()`
+
+---
+
+## Variables
+
+* Use **camelCase**
+* Must be descriptive and domain-aligned
+
+Examples:
+
+* `paymentAmount`
+* `idempotencyKey`
+* `paymentStatus`
+
+---
+
+## Events
+
+* Use **Past Tense Naming**
+
+Examples:
+
+* `PaymentCreated`
+* `PaymentCompleted`
+* `PaymentFailed`
+
+---
+
+## Packages / Modules
+
+* Use **domain-first structure**
+* Avoid technical layering leakage in names
+
+Examples:
+
+* `payments.domain`
+* `payments.application`
+* `payments.infrastructure`
+
+---
+
+# Linting Rules
+
+## General Standards
+
+* All code must pass linting before merge
+* No suppression of lint warnings without justification
+* Lint rules must be enforced in CI pipeline
+
+---
+
+## Formatting
+
+* Consistent indentation (4 spaces preferred)
+* Max line length: 120 characters
+* No trailing whitespace
+* One class per file (where applicable)
+
+---
+
+## Static Analysis Rules
+
+* No unused variables or imports
+* No empty catch blocks
+* No silent exception swallowing
+* No overly complex methods (max cyclomatic complexity threshold defined per service)
+
+---
+
+## Dependency Rules
+
+* No circular dependencies
+* Domain layer must not depend on infrastructure layer
+* Application layer must not depend on API layer
+
+---
+
+# Layering Rules
+
+The Payments Domain follows a strict layered architecture.
+
+---
+
+## Allowed Dependency Flow
+
+```
+API Layer → Application Layer → Domain Layer → Infrastructure Layer
+```
+
+---
+
+## Rules
+
+* Domain layer must be **pure and framework-independent**
+* Application layer orchestrates use cases only
+* Infrastructure layer handles external systems (DB, Kafka, PSPs)
+* API layer must not contain business logic
+
+---
+
+## Forbidden Cross-Layer Access
+
+* Domain → API ❌
+* Infrastructure → Domain (except interfaces) ❌
+* API → Infrastructure ❌
+
+---
+
+## Domain Integrity Rules
+
+* Business rules must reside in Domain layer only
+* State transitions must be enforced in domain model
+* No business logic in controllers or repositories
+
+---
+
+# Code Review and Validation
+
+## Mandatory Review Requirements
+
+* At least **one senior engineer approval**
+* All payment-related changes require **domain expert review**
+* All changes must pass CI pipeline before review completion
+
+---
+
+## Review Checklist
+
+Reviewers must verify:
+
+* Business rules are correctly implemented
+* No violation of domain model integrity
+* Proper idempotency handling
+* Correct event emission
+* No leakage of infrastructure concerns into domain logic
+
+---
+
+## Validation Gates
+
+Before merge:
+
+* Unit tests must pass
+* Integration tests must pass
+* Lint checks must pass
+* Security scan must pass
+* Event contract validation must pass
+
+---
+
+## Quality Expectations
+
+* Code must be readable without additional explanation
+* Complex logic must include documentation or comments
+* Public APIs must be self-explanatory
+
+---
+
+# Forbidden Rules
+
+These rules are strict and non-negotiable.
+
+---
+
+## Architecture Violations
+
+* ❌ Business logic in controllers
+* ❌ Direct database access outside repositories
+* ❌ Synchronous calls replacing event-driven flows (without ADR)
+* ❌ Cross-domain database sharing
+
+---
+
+## Payment Domain Violations
+
+* ❌ Modifying payment state outside domain model
+* ❌ Skipping state transitions
+* ❌ Bypassing idempotency checks
+* ❌ Direct external PSP calls outside provider adapters
+
+---
+
+## Code Quality Violations
+
+* ❌ Silent exception handling
+* ❌ Magic numbers in payment logic
+* ❌ Hardcoded credentials or secrets
+* ❌ Duplicate payment logic across services
+
+---
+
+## Eventing Violations
+
+* ❌ Publishing events without persistence guarantee
+* ❌ Modifying events after publication
+* ❌ Skipping event versioning strategy
+* ❌ Sending events without correlation IDs
+
+---
+
+# Summary
+
+These coding standards ensure that the Payments Domain remains:
+
+* Consistent in structure and naming
+* Safe from architectural drift
+* Maintainable at scale
+* Reliable in financial operations
+
+All engineers are expected to follow these rules strictly. Deviations must be justified via ADR and approved by the architecture team.
