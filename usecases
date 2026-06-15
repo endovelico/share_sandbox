@@ -1,0 +1,247 @@
+# Payments Domain – Requirements & Use Cases
+
+# Overview
+
+This document defines the functional requirements and primary use cases of the Payments Domain. It describes what the system must do from a business perspective and provides traceable links between business needs, domain behavior, and system interactions.
+
+The Payments Domain is responsible for enabling reliable initiation, processing, tracking, and settlement of client payments across multiple channels and providers.
+
+---
+
+# Use Cases
+
+---
+
+## UC-001: Initiate Payment
+
+### Description
+
+A client or upstream system initiates a payment request for a specified amount and payee.
+
+### Primary Actors
+
+* Orders Domain
+* Billing Domain
+* Subscription Domain
+* Client System
+
+### Preconditions
+
+* Client must be valid and identifiable
+* Payment request must include amount and currency
+
+### Main Flow
+
+1. Upstream system sends payment request.
+2. Payments Domain validates request.
+3. Payment is created with status “Initiated”.
+4. PaymentIntent is optionally created.
+5. Payment event is published.
+
+### Postconditions
+
+* Payment is stored in the system
+* Payment is available for processing
+
+---
+
+## UC-002: Process Payment
+
+### Description
+
+The system processes a previously initiated payment through an external payment provider.
+
+### Primary Actors
+
+* Payments Domain
+* Payment Provider (PSP)
+
+### Preconditions
+
+* Payment must be in “Initiated” or “Pending” state
+* Valid provider must be available
+
+### Main Flow
+
+1. Payment is selected for processing.
+2. Provider is selected.
+3. Payment is sent to provider.
+4. Provider responds with result.
+5. PaymentTransaction is recorded.
+6. Payment state is updated accordingly.
+
+### Postconditions
+
+* Payment is either Completed or Failed (or remains Pending if async)
+
+---
+
+## UC-003: Handle Payment Failure
+
+### Description
+
+System handles failures during payment execution or provider processing.
+
+### Primary Actors
+
+* Payments Domain
+* Payment Provider
+
+### Preconditions
+
+* Payment processing attempt has failed
+
+### Main Flow
+
+1. Failure response is received.
+2. Failure reason is recorded.
+3. Payment status is updated to Failed.
+4. PaymentFailed event is published.
+
+### Postconditions
+
+* Payment is marked as Failed
+* Failure is traceable
+
+---
+
+## UC-004: Refund Payment
+
+### Description
+
+A previously completed payment is partially or fully refunded.
+
+### Primary Actors
+
+* Customer Support
+* Finance Team
+* Payments Domain
+
+### Preconditions
+
+* Payment must be in Completed state
+
+### Main Flow
+
+1. Refund request is initiated.
+2. System validates refund eligibility.
+3. Refund is created.
+4. Provider is contacted for fund reversal.
+5. Refund status is updated.
+
+### Postconditions
+
+* Refund is recorded
+* Payment balance is updated accordingly
+
+---
+
+## UC-005: Reconcile Payments
+
+### Description
+
+Internal payment records are reconciled with external provider records.
+
+### Primary Actors
+
+* Finance Team
+* Payments Domain
+
+### Preconditions
+
+* External provider data is available
+
+### Main Flow
+
+1. External provider report is retrieved.
+2. Internal payments are matched.
+3. Discrepancies are identified.
+4. Adjustments or alerts are generated.
+
+### Postconditions
+
+* Payment records are aligned with external source of truth
+
+---
+
+## UC-006: Query Payment Status
+
+### Description
+
+A client or system retrieves the current status of a payment.
+
+### Primary Actors
+
+* Orders Domain
+* Customer Support
+* Client System
+
+### Preconditions
+
+* Payment must exist
+
+### Main Flow
+
+1. Request is received with payment ID.
+2. System retrieves payment record.
+3. Current status and metadata are returned.
+
+### Postconditions
+
+* No state change occurs
+
+---
+
+# Cross References
+
+This section maps use cases to related domain artifacts.
+
+## Domain Model Mapping
+
+* UC-001 → Payment, PaymentIntent
+* UC-002 → PaymentTransaction, PaymentProvider
+* UC-003 → Payment, PaymentStatus
+* UC-004 → Refund, Payment
+* UC-005 → PaymentTransaction, PaymentProvider
+* UC-006 → Payment
+
+---
+
+## Business Rules Mapping
+
+* UC-001 → RULE-001, RULE-002, RULE-005
+* UC-002 → RULE-006, RULE-011, RULE-012
+* UC-003 → RULE-015, RULE-010
+* UC-004 → RULE-008, RULE-009
+* UC-005 → RULE-013
+* UC-006 → RULE-001, RULE-013
+
+---
+
+## Domain Events Mapping
+
+* UC-001 → PaymentCreated
+* UC-002 → PaymentProcessing, PaymentCompleted
+* UC-003 → PaymentFailed
+* UC-004 → PaymentRefunded
+* UC-005 → (internal reconciliation events)
+* UC-006 → (no events)
+
+---
+
+## System Context Mapping
+
+* UC-001 → Orders, Billing, Subscription
+* UC-002 → Payment Providers
+* UC-003 → Payment Providers, Notifications
+* UC-004 → Finance, Customer Support, PSPs
+* UC-005 → Finance, Reporting Systems
+* UC-006 → Customer Support, Orders
+
+---
+
+# Summary
+
+The Payments Domain supports a small set of high-value use cases that together cover the entire payment lifecycle: initiation, processing, failure handling, refunds, reconciliation, and querying.
+
+Each use case is tightly connected to domain rules, events, and entities to ensure traceability and consistency across the system. The separation of concerns across domains ensures scalability, maintainability, and clear ownership boundaries.
