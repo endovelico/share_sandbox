@@ -1,0 +1,155 @@
+# Payments Domain – Business Rules
+
+# Purpose
+
+This document defines the enforceable business rules governing the Payments Domain. These rules represent non-negotiable constraints derived from business requirements, regulatory obligations, and system integrity needs.
+
+All implementations, workflows, and integrations must comply with these rules.
+
+---
+
+# Business Rules
+
+---
+
+## RULE-001: Every payment must have a unique identifier
+
+Source: Business/Architecture/Compliance
+
+Each payment must be assigned a globally unique identifier at creation time to ensure traceability and prevent duplication across systems.
+
+---
+
+## RULE-002: Payment amounts must be greater than zero
+
+Source: Business/Finance/Validation
+
+Payments must have a strictly positive amount. Zero or negative values are not permitted under any circumstance.
+
+---
+
+## RULE-003: Payments must follow a valid lifecycle state transition
+
+Source: Architecture/Domain Model/Business
+
+A payment must only transition through predefined valid states. Skipping states or transitioning to invalid states is not allowed.
+
+---
+
+## RULE-004: Payments are immutable in terminal states
+
+Source: Compliance/Architecture/Finance
+
+Once a payment reaches a terminal state (Completed, Failed, Cancelled), it must not be modified.
+
+---
+
+## RULE-005: Idempotency must be enforced for all payment creation requests
+
+Source: Architecture/Engineering/Platform
+
+Repeated requests with the same idempotency key must result in the same payment outcome without duplication.
+
+---
+
+## RULE-006: Each payment must be processed through exactly one provider per transaction attempt
+
+Source: Integration/Architecture/Engineering
+
+A single transaction attempt must be executed against one payment provider only.
+
+---
+
+## RULE-007: A payment may have multiple transaction attempts but only one successful outcome
+
+Source: Architecture/Domain Model/Business
+
+Multiple retries are allowed, but only one successful transaction is required to complete a payment.
+
+---
+
+## RULE-008: Refunds cannot exceed the original payment amount
+
+Source: Finance/Compliance
+
+The total sum of refunds associated with a payment must not exceed the original payment amount.
+
+---
+
+## RULE-009: Refunds can only be created for completed payments
+
+Source: Finance/Business Rules/Domain Model
+
+Refund operations are only valid if the original payment is in a Completed state.
+
+---
+
+## RULE-010: Payment state changes must be auditable
+
+Source: Compliance/Audit/Architecture
+
+Every change in payment state must be recorded in an immutable audit trail for traceability and compliance.
+
+---
+
+## RULE-011: External payment providers are not trusted sources of truth
+
+Source: Architecture/Integration/Domain Model
+
+Provider responses must be validated and normalized before updating internal payment state.
+
+---
+
+## RULE-012: Payment processing must be resilient to retries and partial failures
+
+Source: Engineering/Resilience/Architecture
+
+Payment operations must be designed to handle retries without causing inconsistent state or duplication.
+
+---
+
+## RULE-013: Payments must be traceable end-to-end across all systems
+
+Source: Compliance/Observability/Architecture
+
+Every payment must be traceable from initiation through all processing stages and final outcome.
+
+---
+
+## RULE-014: Currency must conform to ISO 4217 standard
+
+Source: Finance/Integration/Validation
+
+All payment currency values must use valid ISO 4217 currency codes.
+
+---
+
+## RULE-015: Failed payments must include a failure reason
+
+Source: Operations/Support/Engineering
+
+Any payment that transitions to a Failed state must include a structured reason for failure.
+
+---
+
+## RULE-016: Payment processing must not block upstream systems
+
+Source: Architecture/Performance/Platform
+
+Payment execution must be designed to avoid blocking or degrading upstream systems such as Orders or Billing.
+
+---
+
+## RULE-017: All payment events must be immutable once published
+
+Source: Architecture/Eventing/Platform
+
+Published domain events must not be modified or deleted after emission.
+
+---
+
+# Notes
+
+* These rules are authoritative within the Payments Domain.
+* Any deviation requires a documented Architecture Decision Record (ADR).
+* New rules must be reviewed by both Engineering and Business stakeholders before adoption.
