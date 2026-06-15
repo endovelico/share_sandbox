@@ -1,0 +1,92 @@
+# Payments Domain – Ubiquitous Language
+
+# Purpose
+
+This document defines the shared vocabulary used across the Payments Domain. It ensures that business stakeholders, engineers, and downstream systems use consistent terminology when describing payment concepts, workflows, and states.
+
+All terms defined here are authoritative within the Payments Domain context.
+
+---
+
+# Core Payment Terms
+
+| Term                | Definition                                                                               | Context                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Payment             | A financial transaction initiated by a client to transfer funds from a payer to a payee. | Core domain concept representing the end-to-end transaction lifecycle.         |
+| Payment Request     | A request to initiate a payment process.                                                 | Input from upstream systems such as Orders or Billing.                         |
+| Payment Intent      | A preliminary representation of a payment before execution.                              | Used when payment confirmation or authorization is required before processing. |
+| Payment Transaction | The concrete execution instance of a payment with a provider.                            | Represents interaction with external payment providers.                        |
+| Payment Status      | The current state of a payment in its lifecycle.                                         | Used for tracking and state transitions.                                       |
+| Payment Lifecycle   | The sequence of states a payment goes through from creation to completion or failure.    | Defines allowed state transitions.                                             |
+
+---
+
+# Payment States
+
+| Term       | Definition                                           | Context                                                     |
+| ---------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Initiated  | Payment has been created but not yet processed.      | Initial state after payment creation.                       |
+| Pending    | Payment is awaiting processing or confirmation.      | Typically waiting on external provider or async validation. |
+| Authorized | Payment has been approved but not yet captured.      | Common in card-based flows.                                 |
+| Processing | Payment is actively being processed by a provider.   | Temporary state during execution.                           |
+| Completed  | Payment has been successfully processed and settled. | Terminal success state.                                     |
+| Failed     | Payment could not be completed due to an error.      | Terminal failure state.                                     |
+| Cancelled  | Payment was intentionally aborted before completion. | User or system-initiated cancellation.                      |
+| Refunded   | Payment has been reversed partially or fully.        | Post-completion reversal state.                             |
+
+---
+
+# Actors & Roles
+
+| Term             | Definition                                               | Context                                   |
+| ---------------- | -------------------------------------------------------- | ----------------------------------------- |
+| Client           | The end user or system initiating a payment.             | Originator of payment requests.           |
+| Payer            | The entity that provides funds for the payment.          | May differ from client in some scenarios. |
+| Payee            | The entity receiving funds from a payment.               | Target beneficiary of payment.            |
+| Merchant         | Business entity receiving payment for goods or services. | Common in e-commerce flows.               |
+| Payment Provider | External service that processes financial transactions.  | Includes PSPs like Stripe or Adyen.       |
+
+---
+
+# Integration & Systems
+
+| Term                           | Definition                                                              | Context                                 |
+| ------------------------------ | ----------------------------------------------------------------------- | --------------------------------------- |
+| Payment Service Provider (PSP) | External system that executes payment processing.                       | Abstracted behind provider adapters.    |
+| Payment Gateway                | Interface layer that routes payment requests to providers.              | Internal abstraction layer.             |
+| Reconciliation                 | The process of matching internal payment records with provider records. | Ensures financial correctness.          |
+| Settlement                     | The transfer of funds from payer to payee via provider systems.         | Final financial transfer stage.         |
+| Ledger                         | System of record for financial accounting entries.                      | External accounting system integration. |
+
+---
+
+# Events
+
+| Term              | Definition                                          | Context                                 |
+| ----------------- | --------------------------------------------------- | --------------------------------------- |
+| PaymentCreated    | Event emitted when a payment is created.            | Triggered at initialization stage.      |
+| PaymentAuthorized | Event emitted when payment is approved.             | Used in approval-based flows.           |
+| PaymentProcessed  | Event emitted when provider processing completes.   | Intermediate or final processing event. |
+| PaymentCompleted  | Event emitted when payment is successfully settled. | Terminal success event.                 |
+| PaymentFailed     | Event emitted when payment processing fails.        | Terminal failure event.                 |
+| PaymentRefunded   | Event emitted when a refund is executed.            | Post-settlement reversal event.         |
+
+---
+
+# Operational Terms
+
+| Term                 | Definition                                                                           | Context                                           |
+| -------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| Idempotency          | Property ensuring repeated requests produce the same result without duplication.     | Critical for safe retries in payment APIs.        |
+| Reconciliation Batch | Group of transactions processed together for validation.                             | Used in financial matching workflows.             |
+| Retry                | Re-attempt of a failed or incomplete operation.                                      | Used in transient failure handling.               |
+| Timeout              | Maximum allowed time for a payment operation before marking it as failed or pending. | Operational constraint in provider communication. |
+| Audit Trail          | Complete history of actions performed on a payment.                                  | Required for compliance and traceability.         |
+
+---
+
+# Notes
+
+* Terms defined here must be used consistently in all domain documentation.
+* Any new term introduced in design, code, or events must be added here or rejected during review.
+* Conflicting terminology across domains should be resolved at the bounded context level.
