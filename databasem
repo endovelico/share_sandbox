@@ -1,0 +1,236 @@
+# Payments Domain – Database Migration Strategy
+
+# Purpose
+
+This document defines the strategies, rules, and operational practices for managing database schema changes in the Payments Domain.
+
+Given the financial nature of the domain, database changes must be **safe, reversible, backward-compatible, and fully observable**.
+
+---
+
+# Migration Strategies
+
+## Approach
+
+The Payments Domain follows an **expand-and-contract migration strategy**:
+
+1. **Expand Phase**
+
+   * Add new schema elements without breaking existing functionality
+   * Introduce nullable columns or new tables
+   * Deploy backward-compatible code changes
+
+2. **Migrate Phase**
+
+   * Dual-write or backfill data if required
+   * Gradually shift system behavior to new schema
+
+3. **Contract Phase**
+
+   * Remove deprecated fields or tables
+   * Ensure no dependent services use legacy schema
+
+---
+
+## Migration Types
+
+* Forward-only migrations (preferred)
+* Zero-downtime migrations
+* Online schema changes for large tables
+* Backfill migrations for historical data correction
+
+---
+
+# Rollback Policies
+
+## General Principles
+
+* Rollbacks must be possible without data loss whenever feasible
+* Not all migrations are fully reversible; design must acknowledge this
+* Rollback strategy must be defined before deployment
+
+---
+
+## Allowed Rollback Types
+
+### Safe Rollbacks
+
+* Dropping newly added columns
+* Reverting schema additions
+* Rolling back application version (without schema dependency)
+
+---
+
+### Unsafe Rollbacks (Requires ADR approval)
+
+* Column type changes after data migration
+* Deletion of production data
+* Structural normalization changes
+
+---
+
+## Rollback Constraints
+
+* No rollback that results in payment loss or inconsistency
+* Financial records must remain intact at all times
+* Rollback must preserve audit integrity
+
+---
+
+# Schema Ownership Rules
+
+## Ownership Model
+
+* Each schema is owned by a single domain: Payments Domain
+* Cross-domain schema access is strictly prohibited
+
+---
+
+## Rules
+
+* Only Payments Domain services may modify payment-related tables
+* No shared database tables between domains
+* External systems must access data via APIs or events only
+
+---
+
+## Forbidden Practices
+
+* ❌ Direct access to Payment DB from Orders or Billing
+* ❌ Shared schema ownership across domains
+* ❌ Ad-hoc schema modifications without migration scripts
+
+---
+
+# Backwards Compatibility Requirements
+
+## API Compatibility
+
+* Schema changes must not break existing API contracts
+* Old and new fields may coexist during transition periods
+
+---
+
+## Event Compatibility
+
+* Existing event consumers must continue functioning
+* New fields must be optional
+* Event versioning must be applied for breaking changes
+
+---
+
+## Database Compatibility
+
+* New columns must be nullable or have defaults
+* Table renames must be avoided unless fully decoupled
+* Index changes must not block production workloads
+
+---
+
+## Contract Rules
+
+* No removal of columns without deprecation period
+* Minimum 1 release cycle for deprecation support
+* Dual-read/dual-write required for breaking changes
+
+---
+
+# Rollback Testing Plan
+
+## Testing Requirements
+
+All migrations must be tested before production deployment.
+
+---
+
+## Test Environments
+
+* Local environment (Docker-based)
+* Staging environment (production-like data)
+* Pre-production environment (full scale simulation)
+
+---
+
+## Test Scenarios
+
+* Forward migration execution
+* Rollback execution (if supported)
+* Partial failure simulation
+* Large dataset migration performance test
+
+---
+
+## Validation Steps
+
+* Verify schema integrity after migration
+* Validate application startup with new schema
+* Ensure no missing or corrupted data
+* Confirm event processing continues correctly
+
+---
+
+## Failure Simulation
+
+* Kill migration mid-execution
+* Simulate DB connection loss
+* Simulate partial backfill failure
+
+---
+
+# Monitoring Migration
+
+## Observability Requirements
+
+All migrations must be fully observable in production.
+
+---
+
+## Metrics
+
+* Migration duration
+* Row-level changes per second
+* Failure rate per migration step
+* Database lock time
+
+---
+
+## Logging
+
+* Every migration step must be logged
+* Include migration ID, timestamp, and affected tables
+* Logs must be correlation-ID traceable
+
+---
+
+## Alerts
+
+Trigger alerts on:
+
+* Migration failure
+* Long-running migrations exceeding threshold
+* Increased DB latency during migration
+* Deadlocks or lock contention spikes
+
+---
+
+## Dashboards
+
+Must include:
+
+* Active migrations
+* Migration history
+* Success vs failure rate
+* Schema evolution timeline
+
+---
+
+# Summary
+
+Database migrations in the Payments Domain are treated as **high-risk financial operations**. They must be:
+
+* Incremental and reversible
+* Fully backward compatible
+* Thoroughly tested before deployment
+* Continuously monitored in production
+
+No schema change is considered safe unless it follows this strategy and is validated through the defined migration pipeline.
