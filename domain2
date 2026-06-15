@@ -1,0 +1,225 @@
+# Payments Domain – Domain Model
+
+# Purpose
+
+This document defines the core domain model of the Payments Domain, including entities, attributes, relationships, and business rules.
+
+It represents the conceptual structure of the domain and serves as the foundation for implementation, event design, and API contracts.
+
+---
+
+# Core Entities
+
+## Payment
+
+The central aggregate representing a financial transaction lifecycle.
+
+### Attributes
+
+| Attribute      | Type              | Description                              |
+| -------------- | ----------------- | ---------------------------------------- |
+| paymentId      | UUID              | Unique identifier for the payment        |
+| status         | PaymentStatus     | Current state of the payment lifecycle   |
+| amount         | Decimal           | Monetary value of the payment            |
+| currency       | String            | ISO currency code (e.g., EUR, USD)       |
+| createdAt      | DateTime          | Timestamp when payment was created       |
+| updatedAt      | DateTime          | Last modification timestamp              |
+| clientId       | UUID              | Identifier of the initiating client      |
+| payerId        | UUID              | Identifier of the payer                  |
+| payeeId        | UUID              | Identifier of the payee                  |
+| providerId     | String            | External payment provider reference      |
+| idempotencyKey | String            | Key used to prevent duplicate processing |
+| failureReason  | String (nullable) | Reason for failure if payment failed     |
+
+### Business Rules
+
+* A Payment must always have a unique `paymentId`.
+* A Payment must have exactly one currency.
+* A Payment must transition through valid states only.
+* A Payment cannot be modified once it reaches a terminal state (Completed, Failed, Cancelled).
+* A Payment must be idempotent with respect to `idempotencyKey`.
+* Amount must be greater than zero.
+* Status transitions must follow the defined lifecycle rules.
+
+---
+
+## PaymentIntent
+
+Represents an intention to perform a payment before execution.
+
+### Attributes
+
+| Attribute | Type         | Description             |
+| --------- | ------------ | ----------------------- |
+| intentId  | UUID         | Unique identifier       |
+| amount    | Decimal      | Intended payment amount |
+| currency  | String       | ISO currency code       |
+| clientId  | UUID         | Initiating client       |
+| status    | IntentStatus | Current intent state    |
+| createdAt | DateTime     | Creation timestamp      |
+
+### Business Rules
+
+* A PaymentIntent may or may not result in a Payment.
+* A PaymentIntent can expire if not acted upon.
+* A PaymentIntent must be validated before conversion to Payment.
+
+---
+
+## PaymentTransaction
+
+Represents an execution instance with an external provider.
+
+### Attributes
+
+| Attribute         | Type                | Description                      |
+| ----------------- | ------------------- | -------------------------------- |
+| transactionId     | UUID                | Unique transaction identifier    |
+| paymentId         | UUID                | Associated Payment               |
+| providerReference | String              | External provider transaction ID |
+| status            | TransactionStatus   | Current execution status         |
+| initiatedAt       | DateTime            | Execution start time             |
+| completedAt       | DateTime (nullable) | Completion time                  |
+
+### Business Rules
+
+* A Payment may have multiple PaymentTransactions (retries or provider changes).
+* Only one successful transaction is required for Payment completion.
+* Transaction status must reflect provider response accurately.
+
+---
+
+## PaymentProvider
+
+Represents an external system that processes payments.
+
+### Attributes
+
+| Attribute           | Type           | Description              |
+| ------------------- | -------------- | ------------------------ |
+| providerId          | String         | Unique identifier        |
+| name                | String         | Provider name            |
+| status              | ProviderStatus | Availability status      |
+| supportedCurrencies | List<String>   | Supported currency codes |
+
+### Business Rules
+
+* A provider may be unavailable temporarily.
+* Payments must fail gracefully if no provider is available.
+* Provider selection must be abstracted from business logic.
+
+---
+
+## Refund
+
+Represents reversal of a completed payment.
+
+### Attributes
+
+| Attribute | Type         | Description                |
+| --------- | ------------ | -------------------------- |
+| refundId  | UUID         | Unique identifier          |
+| paymentId | UUID         | Original payment reference |
+| amount    | Decimal      | Refund amount              |
+| status    | RefundStatus | Current state              |
+| reason    | String       | Reason for refund          |
+| createdAt | DateTime     | Timestamp                  |
+
+### Business Rules
+
+* Refunds can only be created for completed payments.
+* Refund amount cannot exceed original payment amount.
+* Partial refunds are allowed.
+* Refunds must be traceable to original payment.
+
+---
+
+# Entity Relationships
+
+## Payment → PaymentTransaction
+
+* One Payment can have many PaymentTransactions.
+* Each PaymentTransaction belongs to exactly one Payment.
+* Payment success depends on at least one successful transaction.
+
+---
+
+## Payment → Refund
+
+* One Payment can have zero or many Refunds.
+* Refunds are always linked to a single Payment.
+* Refunds cannot exist without a completed Payment.
+
+---
+
+## PaymentIntent → Payment
+
+* One PaymentIntent may generate zero or one Payment.
+* Relationship is optional and depends on execution outcome.
+
+---
+
+## Payment → PaymentProvider
+
+* A Payment is processed by exactly one PaymentProvider per transaction.
+* Provider selection is abstracted and not stored as business logic.
+
+---
+
+## PaymentTransaction → PaymentProvider
+
+* Each transaction is executed against one provider.
+* Providers may differ across retries or fallback scenarios.
+
+---
+
+# Domain Constraints
+
+## Consistency Rules
+
+* Payment state transitions must be atomic and validated.
+* No Payment may skip intermediate lifecycle states.
+
+## Idempotency Rules
+
+* Duplicate PaymentRequests with same idempotencyKey must return same Payment.
+
+## Temporal Rules
+
+* A Payment cannot be marked Completed before successful transaction confirmation.
+* Refunds must occur after Payment completion.
+
+## Financial Rules
+
+* Payment amount must always be positive.
+* Refund total must not exceed original payment amount.
+
+## Integrity Rules
+
+* All Payments must be traceable through at least one PaymentTransaction.
+* No orphan Refunds are allowed.
+
+---
+
+# Aggregates
+
+## Payment Aggregate (Root)
+
+* Payment
+* PaymentTransaction
+* Refund
+
+Rules:
+
+* Payment is the aggregate root.
+* All modifications to child entities must go through Payment.
+* Consistency is enforced at Payment level.
+
+---
+
+# Notes
+
+* This model is technology-agnostic.
+* It does not define database schema or API structure.
+* It is intended to guide implementation and maintain domain consistency.
+* Any deviation must be documented via ADR.
