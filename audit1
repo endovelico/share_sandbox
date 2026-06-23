@@ -1,0 +1,332 @@
+For a **full audit report of a microservices domain**, I'd avoid making it a giant document that's just a list of services and problems. The report should answer four questions:
+
+1. **What exists?**
+2. **How does it work?**
+3. **What's wrong with it?**
+4. **What should we do about it?**
+
+A format I like is a **technical audit + architecture assessment**.
+
+# 1. Executive Summary (1 page)
+
+This is for engineering managers, architects, and leads.
+
+Include:
+
+* Domain audited
+* Number of services
+* Major findings (3–5 bullets)
+* Overall health score
+* Biggest risks
+* Highest priority recommendations
+
+Example:
+
+| Area          | Status | Notes                            |
+| ------------- | ------ | -------------------------------- |
+| Architecture  | 🟡     | Coupling between services        |
+| Reliability   | 🔴     | Missing retries/circuit breakers |
+| Observability | 🟡     | Partial tracing                  |
+| Security      | 🟢     | Good                             |
+| Documentation | 🔴     | Outdated                         |
+
+---
+
+# 2. Scope
+
+Define exactly what was audited.
+
+**In scope**
+
+* 12 microservices
+* APIs
+* Message queues
+* Databases
+* CI/CD
+* Monitoring
+
+**Out of scope**
+
+* Frontend
+* Shared infrastructure
+* Authentication platform
+
+---
+
+# 3. Domain Overview
+
+Describe the business domain.
+
+Answer:
+
+> What business capability does this domain provide?
+
+Example:
+
+```
+Order Domain
+
+Responsible for:
+- Order creation
+- Order validation
+- Payment orchestration
+- Fulfillment initiation
+- Order status tracking
+```
+
+Include:
+
+* Main responsibilities
+* Boundaries
+* External dependencies
+
+---
+
+# 4. Architecture Overview
+
+Add a diagram.
+
+Show:
+
+```
+Client
+ |
+ API Gateway
+ |
+ +---- Order Service
+ |
+ +---- Inventory Service
+ |
+ +---- Payment Service
+ |
+ +---- Notification Service
+```
+
+For each service:
+
+| Service   | Responsibility  | Owner  | Language | Database   |
+| --------- | --------------- | ------ | -------- | ---------- |
+| Order     | Order lifecycle | Team A | Java     | PostgreSQL |
+| Inventory | Stock           | Team B | Go       | Redis      |
+| Payment   | Payments        | Team C | Java     | PostgreSQL |
+
+---
+
+# 5. Service-by-Service Assessment
+
+Repeat this section for every service.
+
+## Service: Order Service
+
+### Purpose
+
+Short description.
+
+### Dependencies
+
+Calls:
+
+* Inventory Service
+* Payment Service
+* Kafka
+
+### Data ownership
+
+Owns:
+
+* Orders
+* Order items
+
+### API assessment
+
+Evaluate:
+
+* REST conventions
+* Versioning
+* Error handling
+* Idempotency
+
+### Reliability
+
+Evaluate:
+
+* Timeouts
+* Retries
+* Circuit breakers
+* Bulkheads
+
+### Observability
+
+Evaluate:
+
+* Structured logging
+* Metrics
+* Tracing
+* Dashboards
+
+### Security
+
+Evaluate:
+
+* Authentication
+* Authorization
+* Secrets management
+
+### CI/CD
+
+Evaluate:
+
+* Test coverage
+* Deployment strategy
+* Rollback capability
+
+### Findings
+
+| Severity | Finding               |
+| -------- | --------------------- |
+| High     | No retry strategy     |
+| Medium   | No API versioning     |
+| Low      | Missing documentation |
+
+### Recommendations
+
+* Add retries
+* Introduce v1 endpoints
+* Add runbook
+
+---
+
+# 6. Cross-Cutting Concerns
+
+These are often where the biggest issues are.
+
+Audit:
+
+### Communication
+
+* Sync vs async
+* Cascading calls
+* Chatty services
+
+### Data management
+
+* Shared databases ❌
+* Data duplication
+* Ownership violations
+
+### Resilience
+
+* Timeouts
+* Retries
+* Circuit breakers
+* Dead-letter queues
+
+### Observability
+
+* Logs
+* Metrics
+* Distributed tracing
+
+### Security
+
+* AuthN/AuthZ
+* Secret rotation
+* Encryption
+
+### Deployment
+
+* CI/CD
+* Rollbacks
+* Canary releases
+
+### Documentation
+
+* ADRs
+* Runbooks
+* API specs
+
+---
+
+# 7. Risk Register
+
+This is one of the most valuable sections.
+
+| ID | Risk                       | Severity | Impact             | Recommendation          |
+| -- | -------------------------- | -------- | ------------------ | ----------------------- |
+| R1 | Shared DB between services | High     | Tight coupling     | Separate ownership      |
+| R2 | No distributed tracing     | Medium   | Hard debugging     | Implement OpenTelemetry |
+| R3 | Missing retries            | High     | Cascading failures | Add resilience patterns |
+
+---
+
+# 8. Technical Debt Register
+
+Track debt separately from risks.
+
+| ID | Debt                    | Effort | Priority |
+| -- | ----------------------- | ------ | -------- |
+| D1 | Upgrade Spring Boot     | M      | High     |
+| D2 | Standardize logging     | S      | Medium   |
+| D3 | Remove duplicate models | L      | Medium   |
+
+---
+
+# 9. Recommendations Roadmap
+
+Break work into phases.
+
+### 0–30 days
+
+* Add missing dashboards
+* Add service ownership
+* Fix high-risk items
+
+### 30–90 days
+
+* Implement tracing
+* Introduce API versioning
+* Add retry policies
+
+### 90–180 days
+
+* Reduce coupling
+* Refactor data ownership
+* Remove shared databases
+
+---
+
+# 10. Appendices
+
+Include:
+
+* Architecture diagrams
+* Dependency graphs
+* API inventory
+* Database inventory
+* Queue/topic inventory
+* Dashboard links
+* Repository links
+
+---
+
+# My preferred folder structure
+
+```
+audit-report/
+|
+├── 01-executive-summary.md
+├── 02-scope.md
+├── 03-domain-overview.md
+├── 04-architecture.md
+├── 05-service-assessments/
+│   ├── order-service.md
+│   ├── inventory-service.md
+│   └── payment-service.md
+├── 06-cross-cutting-concerns.md
+├── 07-risk-register.md
+├── 08-technical-debt.md
+├── 09-roadmap.md
+└── appendix.md
+```
+
+If this is an **internal engineering audit at a company**, I'd also add a **RAG score (🟢 🟡 🔴)** for every category because executives tend to consume those reports much faster than reading 50+ pages of technical findings.
