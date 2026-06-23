@@ -1,0 +1,141 @@
+Good — adding a **RAG (Red / Amber / Green) scoring system** makes the audit much more actionable and executive-friendly.
+
+Here’s how to integrate it properly into your report.
+
+---
+
+# 1. Add a Global RAG Summary (top of report)
+
+This becomes your **“health dashboard” for the domain**.
+
+| Area           | RAG | Meaning                               |
+| -------------- | --- | ------------------------------------- |
+| Architecture   | 🟡  | Moderate coupling between services    |
+| Reliability    | 🔴  | Cascading failure risk present        |
+| Observability  | 🟡  | Partial tracing, inconsistent metrics |
+| Security       | 🟢  | Strong baseline controls              |
+| Data Ownership | 🔴  | Shared DBs across services            |
+| CI/CD          | 🟡  | Uneven deployment maturity            |
+
+### Global Health Statement
+
+> Overall domain health: 🟡 **Moderate risk**
+> Main concerns: resilience + data ownership
+> Primary strength: security posture
+
+---
+
+# 2. Define RAG Criteria (important for consistency)
+
+Add a section like this early in the report:
+
+## RAG Definition
+
+* 🟢 **Green** → Healthy, no major issues, aligns with best practices
+* 🟡 **Amber** → Some issues, manageable risk, improvements recommended
+* 🔴 **Red** → Critical risk, potential outages, incidents, or architectural debt
+
+### Scoring rules (make it explicit)
+
+Example:
+
+* Reliability: based on retries, timeouts, failure handling
+* Observability: logs + metrics + tracing completeness
+* Architecture: coupling, bounded contexts, dependency direction
+* Security: auth, secrets, encryption, access control
+* CI/CD: automation, rollback safety, test coverage
+
+This is important because otherwise RAG becomes subjective noise.
+
+---
+
+# 3. Add RAG per Section (not just global)
+
+Every major section should include a score.
+
+## Example: Service Assessment (updated)
+
+### Service: Order Service
+
+| Dimension       | RAG | Notes                             |
+| --------------- | --- | --------------------------------- |
+| Reliability     | 🔴  | No retries, no circuit breakers   |
+| Observability   | 🟡  | Logs exist but no tracing         |
+| Security        | 🟢  | Proper auth implemented           |
+| Maintainability | 🟡  | Some duplication in domain models |
+
+### Summary RAG for Service
+
+> Order Service: 🔴 High risk due to resilience gaps
+
+---
+
+# 4. Add RAG in Cross-Cutting Concerns
+
+## Example
+
+| Area                  | RAG | Comment                            |
+| --------------------- | --- | ---------------------------------- |
+| Service Communication | 🔴  | Tight coupling, synchronous chains |
+| Data Ownership        | 🔴  | Shared databases detected          |
+| Observability         | 🟡  | Partial distributed tracing        |
+| Deployment Safety     | 🟡  | No canary releases                 |
+
+---
+
+# 5. Add RAG-driven Risk Register
+
+Now your risks become measurable:
+
+| ID | Risk                             | RAG | Severity | Notes                          |
+| -- | -------------------------------- | --- | -------- | ------------------------------ |
+| R1 | Shared database between services | 🔴  | High     | Breaks microservice boundaries |
+| R2 | Missing retries                  | 🔴  | High     | Cascading failures possible    |
+| R3 | No tracing                       | 🟡  | Medium   | Debugging difficulty           |
+
+---
+
+# 6. Add “RAG Heatmap Summary”
+
+At the end of the report, include a quick visual:
+
+## Domain Heatmap
+
+* Architecture: 🟡
+* Reliability: 🔴
+* Observability: 🟡
+* Security: 🟢
+* Data ownership: 🔴
+* CI/CD: 🟡
+
+This makes the report instantly scannable.
+
+---
+
+# 7. Add RAG-based prioritization rule
+
+This is very useful and often missing.
+
+## Prioritization Logic
+
+* 🔴 items → must fix (blockers / production risk)
+* 🟡 items → plan in next 1–2 quarters
+* 🟢 items → maintain, no immediate action
+
+---
+
+# Final upgrade summary
+
+With RAG added, your audit now becomes:
+
+> not just descriptive → but decision-driven
+
+It allows leadership to:
+
+* see system health in 10 seconds
+* prioritize engineering work
+* track improvement over time
+
+---
+
+If you want, I can next turn this into a **ready-to-use Markdown template or Notion template** you can directly reuse for every microservices audit.
