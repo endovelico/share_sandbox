@@ -1,0 +1,150 @@
+Sure. Here's the same logical event ("user creates a new customer") represented in each of the common schemas. Notice that the actual business data is very similar—it's mostly the field names and organization that differ.
+
+### 1. Elastic Common Schema (ECS)
+
+ECS is probably the most widely adopted if you're using the Elastic stack, but it's also used outside of it.
+
+```json
+{
+  "@timestamp": "2026-07-01T14:32:15.123Z",
+  "log.level": "INFO",
+  "message": "Customer created successfully",
+
+  "service.name": "customer-api",
+  "service.version": "2.4.1",
+  "service.environment": "production",
+
+  "event.category": "database",
+  "event.type": "creation",
+  "event.action": "create_customer",
+  "event.outcome": "success",
+
+  "trace.id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "transaction.id": "6d8b9c4f2a",
+
+  "user.id": "user-123",
+  "user.name": "alice@example.com",
+
+  "http.request.method": "POST",
+  "url.path": "/customers",
+
+  "labels": {
+    "customerType": "enterprise",
+    "source": "web"
+  },
+
+  "customer.id": "cust-456"
+}
+```
+
+---
+
+### 2. OpenTelemetry Logs
+
+OpenTelemetry is designed around observability and works well if you're already using distributed tracing and metrics.
+
+```json
+{
+  "timestamp": "2026-07-01T14:32:15.123Z",
+  "severityText": "INFO",
+  "severityNumber": 9,
+  "body": "Customer created successfully",
+
+  "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "spanId": "00f067aa0ba902b7",
+
+  "resource": {
+    "service.name": "customer-api",
+    "service.version": "2.4.1",
+    "deployment.environment": "production"
+  },
+
+  "attributes": {
+    "event.action": "create_customer",
+    "event.outcome": "success",
+
+    "http.request.method": "POST",
+    "http.route": "/customers",
+
+    "user.id": "user-123",
+    "customer.id": "cust-456",
+
+    "customer.type": "enterprise",
+    "source": "web"
+  }
+}
+```
+
+---
+
+### 3. Common Schema
+
+This is a more generic example showing the idea of separating common metadata from application-specific data.
+
+```json
+{
+  "timestamp": "2026-07-01T14:32:15.123Z",
+  "level": "INFO",
+  "message": "Customer created successfully",
+
+  "service": {
+    "name": "customer-api",
+    "version": "2.4.1",
+    "environment": "production"
+  },
+
+  "request": {
+    "id": "req-abc123",
+    "method": "POST",
+    "path": "/customers"
+  },
+
+  "user": {
+    "id": "user-123"
+  },
+
+  "event": {
+    "action": "create_customer",
+    "outcome": "success"
+  },
+
+  "data": {
+    "customerId": "cust-456",
+    "customerType": "enterprise",
+    "source": "web"
+  }
+}
+```
+
+## Which one would I recommend?
+
+If you're starting fresh today:
+
+* **OpenTelemetry** if you're also adopting tracing and metrics (this is where the industry is heading).
+* **Elastic Common Schema (ECS)** if you're using Elasticsearch/Kibana or want a very mature logging schema.
+* **A simplified ECS-inspired schema** if you don't want to commit to a vendor or framework.
+
+For most enterprise applications, I usually recommend keeping the logs in three layers:
+
+```json
+{
+  "timestamp": "...",
+  "level": "INFO",
+  "message": "...",
+
+  "service": { ... },
+  "request": { ... },
+  "trace": { ... },
+  "user": { ... },
+  "event": { ... },
+
+  "business": {
+    "process": "customer_onboarding",
+    "action": "create_customer",
+    "customerId": "cust-456",
+    "tenantId": "tenant-123"
+  }
+}
+```
+
+This approach gives you a stable, queryable core while letting each business process attach whatever additional fields it needs without changing the overall logging structure.
