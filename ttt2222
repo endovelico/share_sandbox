@@ -1,8 +1,8 @@
-# Norma de Desenvolvimento – Unit Testing para Microserviços Spring Boot
+# Norma de Desenvolvimento – Testing na Cetelem /d2d
 
 ## 1. Introdução
 
-Apresenta o objetivo, âmbito e conceitos fundamentais utilizados ao longo da norma.
+Apresenta os objetivos, âmbito e conceitos fundamentais utilizados.
 
 ## 2. Estratégia de Testes
 
@@ -10,7 +10,7 @@ Define o papel dos **Unit Tests** na estratégia global de testes e identifica o
 
 ## 3. Princípios de Desenvolvimento
 
-Estabelece as características de um bom **Unit Test**, convenções de nomenclatura e estrutura recomendada.
+Estabelece as características de um bom Unit Test, convenções de numenculatura e estrutura recomendada.
 
 ## 4. Desenvolvimento de Unit Tests
 
@@ -18,19 +18,19 @@ Descreve as práticas para criação de testes, incluindo preparação de dados,
 
 ## 5. Testes por Tipo de Componente
 
-Apresenta recomendações específicas para **Services**, **Controllers**, **Validators**, **Mappers** e outros componentes da aplicação.
+Apresenta recomendações específicas para Services, Controllers, Validators, Mappers e outros componentes da aplicação.
 
-## 6. Utilização do Mockito
+## 6. Utilização de ferramentas de Mocking
 
-Define as boas práticas para utilização de **Mocks**, **Spies** e verificação de interações entre componentes.
+Define as boas práticas para utilização de Mocks, spies e verificação de interações entre componentes.
 
 ## 7. Assertions
 
-Padroniza a forma de validar resultados, exceções e estruturas de dados através de **Assertions** claras e consistentes.
+Padroniza a forma de validar resultados, exceções e estruturas de dados através de assertions claras e consistentes.
 
 ## 8. Gestão de Test Data
 
-Define estratégias para criação e reutilização de dados de teste, promovendo legibilidade e manutenção.
+Define estratégias para criação e reutilização de dados de teste, de forma a promover legibilidade e manutenção.
 
 ## 9. Boas Práticas e Anti-Patterns
 
@@ -38,15 +38,15 @@ Identifica práticas recomendadas e erros comuns que devem ser evitados durante 
 
 ## 10. Code Coverage
 
-Apresenta os objetivos de cobertura de código e a sua utilização como indicador de qualidade, sem substituir uma boa estratégia de testes.
+Apresenta os objetivos de cobertura de código NA CETELEM e a sua utilização como indicador de qualidade.
 
 ## 11. Integração Contínua
 
-Define os requisitos para execução automática de testes, critérios de aprovação em **Pull Requests** e controlo de qualidade.
+Define os requisitos para execução automática de testes, critérios de aprovação em Pull Requests / Merge Requests e controlo de qualidade.
 
 ## 12. Tópicos Avançados
 
-Aborda cenários específicos como código assíncrono, **REST Clients**, mensageria e outras situações de maior complexidade.
+Mais para cenários específicos e avancados como código assíncrono, Rest Clients (Containers), messaging e outras situações de maior complexidade.
 
 ## 13. Checklist de Code Review
 
