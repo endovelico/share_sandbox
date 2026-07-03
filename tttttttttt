@@ -1,0 +1,478 @@
+A well-structured company guide should progress from **fundamental concepts → practical implementation → advanced techniques → governance and standards**. Below is a comprehensive table of contents that can serve as an internal engineering standard.
+
+# Company Guide: Unit Testing Standards for Spring Boot Java Microservices
+
+## 1. Introduction
+
+### 1.1 Purpose of this Guide
+
+### 1.2 Why Unit Testing Matters
+
+### 1.3 Scope
+
+### 1.4 Target Audience
+
+### 1.5 Definitions
+
+* Unit Test
+* Integration Test
+* End-to-End Test
+* Test Double
+* Mock
+* Stub
+* Spy
+* Fake
+
+---
+
+## 2. Testing Strategy
+
+### 2.1 The Testing Pyramid
+
+### 2.2 Types of Tests
+
+* Unit Tests
+* Integration Tests
+* Component Tests
+* End-to-End Tests
+
+### 2.3 Test Responsibilities
+
+### 2.4 What Should Be Tested at Each Layer
+
+### 2.5 Definition of a Good Unit Test
+
+* Fast
+* Reliable
+* Independent
+* Repeatable
+* Easy to Understand
+* Easy to Maintain
+
+---
+
+## 3. Standard Testing Stack
+
+### 3.1 JUnit 5
+
+### 3.2 Mockito
+
+### 3.3 AssertJ
+
+### 3.4 Spring Boot Test
+
+### 3.5 Testcontainers (Integration Tests)
+
+### 3.6 JaCoCo
+
+### 3.7 Recommended Maven/Gradle Dependencies
+
+---
+
+## 4. Test Project Organization
+
+### 4.1 Test Directory Structure
+
+### 4.2 Package Naming
+
+### 4.3 Test Class Naming
+
+### 4.4 Resource Files
+
+### 4.5 Test Data Organization
+
+---
+
+## 5. Unit Test Design Principles
+
+### 5.1 Testing Behavior vs Implementation
+
+### 5.2 Single Responsibility per Test
+
+### 5.3 One Logical Assertion per Behavior
+
+### 5.4 Test Isolation
+
+### 5.5 Deterministic Tests
+
+### 5.6 Avoiding Test Dependencies
+
+---
+
+## 6. Naming Standards
+
+### 6.1 Test Method Naming
+
+### 6.2 Given-When-Then Naming
+
+### 6.3 should_When_Then Convention
+
+### 6.4 Display Names
+
+### 6.5 Variable Naming
+
+---
+
+## 7. Test Structure
+
+### 7.1 Arrange–Act–Assert Pattern
+
+### 7.2 Given–When–Then Pattern
+
+### 7.3 Test Setup
+
+### 7.4 Test Cleanup
+
+### 7.5 Reusable Test Utilities
+
+---
+
+## 8. Mocking Standards
+
+### 8.1 What to Mock
+
+### 8.2 What Not to Mock
+
+### 8.3 Using @Mock
+
+### 8.4 Using @InjectMocks
+
+### 8.5 Using @Spy
+
+### 8.6 ArgumentCaptor
+
+### 8.7 Verifying Interactions
+
+### 8.8 Common Mocking Mistakes
+
+---
+
+## 9. Assertions
+
+### 9.1 Why AssertJ
+
+### 9.2 Common Assertions
+
+### 9.3 Collection Assertions
+
+### 9.4 Exception Assertions
+
+### 9.5 Optional Assertions
+
+### 9.6 Recursive Object Comparison
+
+---
+
+## 10. Testing Spring Components
+
+### 10.1 Service Classes
+
+### 10.2 Controllers
+
+### 10.3 Repository Layer
+
+### 10.4 Utility Classes
+
+### 10.5 Validators
+
+### 10.6 Mappers
+
+### 10.7 Configuration Classes
+
+### 10.8 Exception Handlers
+
+---
+
+## 11. Testing Business Logic
+
+### 11.1 Positive Scenarios
+
+### 11.2 Negative Scenarios
+
+### 11.3 Boundary Conditions
+
+### 11.4 Validation Rules
+
+### 11.5 Business Rules
+
+### 11.6 Decision Logic
+
+---
+
+## 12. Testing Exceptions
+
+### 12.1 Expected Exceptions
+
+### 12.2 Custom Exceptions
+
+### 12.3 Validation Exceptions
+
+### 12.4 Exception Messages
+
+---
+
+## 13. Parameterized Tests
+
+### 13.1 When to Use
+
+### 13.2 ValueSource
+
+### 13.3 CsvSource
+
+### 13.4 MethodSource
+
+### 13.5 EnumSource
+
+---
+
+## 14. Edge Case Testing
+
+### 14.1 Null Values
+
+### 14.2 Empty Collections
+
+### 14.3 Invalid Input
+
+### 14.4 Maximum Values
+
+### 14.5 Minimum Values
+
+### 14.6 Overflow Scenarios
+
+### 14.7 Duplicate Data
+
+### 14.8 Missing Data
+
+---
+
+## 15. Test Data Management
+
+### 15.1 Test Builders
+
+### 15.2 Object Mother Pattern
+
+### 15.3 Factory Methods
+
+### 15.4 Static Test Data
+
+### 15.5 Random Test Data
+
+### 15.6 Avoiding Hardcoded Values
+
+---
+
+## 16. Common Testing Patterns
+
+### 16.1 Builder Pattern
+
+### 16.2 Factory Pattern
+
+### 16.3 Fixture Pattern
+
+### 16.4 Mother Object Pattern
+
+### 16.5 Fluent Assertions
+
+---
+
+## 17. Common Anti-Patterns
+
+### 17.1 Testing Getters and Setters
+
+### 17.2 Over-Mocking
+
+### 17.3 Testing Framework Code
+
+### 17.4 Multiple Behaviors in One Test
+
+### 17.5 Sleep Statements
+
+### 17.6 Random Data
+
+### 17.7 Shared Mutable State
+
+### 17.8 Magic Numbers
+
+### 17.9 Copy-Paste Tests
+
+### 17.10 Testing Private Methods
+
+---
+
+## 18. Code Coverage
+
+### 18.1 What Coverage Means
+
+### 18.2 Line Coverage
+
+### 18.3 Branch Coverage
+
+### 18.4 Coverage Targets
+
+### 18.5 Coverage vs Quality
+
+### 18.6 JaCoCo Reports
+
+---
+
+## 19. Integration with CI/CD
+
+### 19.1 Running Tests in the Pipeline
+
+### 19.2 Pull Request Requirements
+
+### 19.3 Build Failure Criteria
+
+### 19.4 Test Reporting
+
+### 19.5 Coverage Gates
+
+---
+
+## 20. Performance of Unit Tests
+
+### 20.1 Fast Tests
+
+### 20.2 Avoiding Spring Context
+
+### 20.3 Avoiding I/O
+
+### 20.4 Avoiding Network Calls
+
+### 20.5 Efficient Test Execution
+
+---
+
+## 21. Advanced Topics
+
+### 21.1 Testing CompletableFuture
+
+### 21.2 Testing @Async Methods
+
+### 21.3 Testing Scheduled Jobs
+
+### 21.4 Testing Retry Logic
+
+### 21.5 Testing Circuit Breakers
+
+### 21.6 Testing Caching
+
+### 21.7 Testing Kafka Producers
+
+### 21.8 Testing Kafka Consumers
+
+### 21.9 Testing REST Clients
+
+### 21.10 Testing Feign Clients
+
+### 21.11 Testing Reactive Services (WebFlux)
+
+### 21.12 Mutation Testing
+
+### 21.13 Flaky Test Detection
+
+---
+
+## 22. Sample Project Walkthrough
+
+### 22.1 Project Structure
+
+### 22.2 Service Implementation
+
+### 22.3 Repository
+
+### 22.4 Controller
+
+### 22.5 DTOs
+
+### 22.6 Unit Tests
+
+### 22.7 Integration Tests
+
+### 22.8 CI Configuration
+
+---
+
+## 23. Code Review Checklist
+
+### 23.1 General Checklist
+
+### 23.2 Naming Checklist
+
+### 23.3 Mocking Checklist
+
+### 23.4 Assertions Checklist
+
+### 23.5 Maintainability Checklist
+
+### 23.6 Performance Checklist
+
+---
+
+## 24. Company Standards
+
+### 24.1 Mandatory Rules
+
+### 24.2 Recommended Practices
+
+### 24.3 Exceptions Process
+
+### 24.4 Minimum Coverage Requirements
+
+### 24.5 Pull Request Expectations
+
+### 24.6 Definition of Done
+
+---
+
+## Appendix A – Mockito Cheat Sheet
+
+* Common annotations
+* Stubbing examples
+* Verification examples
+* ArgumentCaptor examples
+
+## Appendix B – AssertJ Cheat Sheet
+
+* Primitive assertions
+* Collection assertions
+* Exception assertions
+* Optional assertions
+* Recursive comparison examples
+
+## Appendix C – JUnit 5 Cheat Sheet
+
+* Lifecycle annotations
+* Nested tests
+* Parameterized tests
+* Repeated tests
+* Assumptions
+* Tags
+
+## Appendix D – Test Naming Examples
+
+* Good examples
+* Bad examples
+* Common naming patterns
+
+## Appendix E – Frequently Asked Questions
+
+* When should I mock a dependency?
+* Should I test private methods?
+* How much coverage is enough?
+* Should controllers have unit tests?
+* Should repositories have unit tests?
+* When should I use `@SpringBootTest`?
+* When should I use Testcontainers?
+* How do I avoid flaky tests?
+
+### Suggested implementation approach
+
+Rather than treating this as a collection of independent topics, organize the guide into four parts:
+
+1. **Foundations (Chapters 1–6):** Core concepts, testing strategy, standards, and project organization.
+2. **Writing Effective Unit Tests (Chapters 7–17):** Practical guidance on structuring tests, mocking, assertions, test data, and avoiding common pitfalls.
+3. **Engineering Practices (Chapters 18–21):** Code coverage, CI/CD integration, performance, and advanced testing scenarios relevant to microservices.
+4. **Company Standards and Reference Material (Chapters 22–Appendices):** A complete example project, review checklists, mandatory standards, and quick-reference cheat sheets.
+
+This organization allows developers to learn the fundamentals first, then apply them consistently, while giving reviewers and architects a clear reference for enforcing testing standards across all Spring Boot microservices.
