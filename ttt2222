@@ -1,57 +1,57 @@
-# Norma de Desenvolvimento – Testing na Cetelem /d2d
+  Norma de Desenvolvimento – Testing na Cetelem /d2d
 
-## 1. Introdução
+   1. Introdução
 
 Apresenta os objetivos, âmbito e conceitos fundamentais utilizados.
 
-## 2. Estratégia de Testes
+   2. Estratégia de Testes
 
 Define o papel dos  Unit Tests  na estratégia global de testes e identifica o que deve (e não deve) ser testado.
 
-## 3. Princípios de Desenvolvimento
+   3. Princípios de Desenvolvimento
 
 Estabelece as características de um bom Unit Test, convenções de numenculatura e estrutura recomendada.
 
-## 4. Desenvolvimento de Unit Tests
+   4. Desenvolvimento de Unit Tests
 
 Descreve as práticas para criação de testes, incluindo preparação de dados, utilização de  Mocks  ,  Assertions  e tratamento de exceções.
 
-## 5. Testes por Tipo de Componente
+   5. Testes por Tipo de Componente
 
 Apresenta recomendações específicas para Services, Controllers, Validators, Mappers e outros componentes da aplicação.
 
-## 6. Utilização de ferramentas de Mocking
+   6. Utilização de ferramentas de Mocking
 
 Define as boas práticas para utilização de Mocks, spies e verificação de interações entre componentes.
 
-## 7. Assertions
+   7. Assertions
 
 Padroniza a forma de validar resultados, exceções e estruturas de dados através de assertions claras e consistentes.
 
-## 8. Gestão de Test Data
+   8. Gestão de Test Data
 
 Define estratégias para criação e reutilização de dados de teste, de forma a promover legibilidade e manutenção.
 
-## 9. Boas Práticas e Anti-Patterns
+   9. Boas Práticas e Anti-Patterns
 
 Identifica práticas recomendadas e erros comuns que devem ser evitados durante o desenvolvimento de  Unit Tests  .
 
-## 10. Code Coverage
+   10. Code Coverage
 
 Apresenta os objetivos de cobertura de código NA CETELEM e a sua utilização como indicador de qualidade.
 
-## 11. Integração Contínua
+   11. Integração Contínua
 
 Define os requisitos para execução automática de testes, critérios de aprovação em Pull Requests / Merge Requests e controlo de qualidade.
 
-## 12. Tópicos Avançados
+   12. Tópicos Avançados
 
 Mais para cenários específicos e avancados como código assíncrono, Rest Clients (Containers), messaging e outras situações de maior complexidade.
 
-## 13. Checklist de Code Review
+   13. Checklist de Code Review
 
 Disponibiliza um conjunto de critérios para validar a qualidade e consistência dos  Unit Tests  durante a revisão de código.
 
-## 14. Anexos
+   14. Anexos
 
 Inclui exemplos práticos, convenções adotadas e guias de referência para as principais bibliotecas utilizadas.
