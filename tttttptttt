@@ -1,0 +1,241 @@
+# Norma de Desenvolvimento – Unit Testing para Microserviços Spring Boot
+
+## 1. Introdução
+
+### 1.1 Objetivo
+
+* Definir o padrão da empresa para desenvolvimento de **Unit Tests**
+* Promover consistência entre equipas e projetos
+* Melhorar a qualidade e manutenção do código
+
+### 1.2 Âmbito
+
+* Aplicações Java baseadas em Spring Boot
+* Arquiteturas de Microservices
+* Novo desenvolvimento e evolução de aplicações existentes
+
+### 1.3 Conceitos Fundamentais
+
+* Unit Test
+* Integration Test
+* End-to-End Test (E2E)
+* Test Double
+
+  * Mock
+  * Stub
+  * Spy
+  * Fake
+
+---
+
+# 2. Estratégia de Testes
+
+### 2.1 Estratégia de Qualidade
+
+* Test Pyramid
+* Papel dos diferentes tipos de teste
+* Quando utilizar Unit Tests
+
+### 2.2 O que deve ser testado
+
+* Business Services
+* Utility Classes
+* Validators
+* Mappers
+* Domain Logic
+
+### 2.3 O que não deve ser testado
+
+* Spring Data Repositories
+* Funcionalidades do framework Spring
+* Código gerado automaticamente
+* Getters e Setters sem lógica de negócio
+
+---
+
+# 3. Princípios para Unit Tests
+
+### 3.1 Características de um bom Unit Test
+
+* Independente
+* Repetível
+* Determinístico
+* Rápido
+* Simples de compreender
+* Fácil de manter
+
+### 3.2 Estrutura recomendada
+
+* Arrange – Act – Assert (AAA)
+* Given – When – Then (GWT)
+
+### 3.3 Convenções de nomenclatura
+
+* Test Classes
+* Test Methods
+* Display Names
+
+---
+
+# 4. Desenvolvimento de Unit Tests
+
+### 4.1 Organização do projeto de testes
+
+### 4.2 Preparação de Test Data
+
+### 4.3 Utilização de Mock Objects
+
+### 4.4 Escrita de Assertions
+
+### 4.5 Testes de Exceções
+
+### 4.6 Parameterized Tests
+
+### 4.7 Testes de casos limite (*Edge Cases*)
+
+---
+
+# 5. Testes por Tipo de Componente
+
+### 5.1 Service Layer
+
+### 5.2 REST Controllers
+
+### 5.3 Validators
+
+### 5.4 Mappers
+
+### 5.5 Configuration Classes
+
+### 5.6 Utility Classes
+
+---
+
+# 6. Utilização do Mockito
+
+### 6.1 Criação de Mocks
+
+### 6.2 Utilização de Spies
+
+### 6.3 Verificação de Interações
+
+### 6.4 Boas práticas
+
+### 6.5 Erros comuns
+
+---
+
+# 7. Assertions
+
+### 7.1 Padrão adotado
+
+### 7.2 Assertions sobre objetos
+
+### 7.3 Collections
+
+### 7.4 Exceptions
+
+### 7.5 Comparação de objetos complexos
+
+---
+
+# 8. Gestão de Test Data
+
+### 8.1 Test Builders
+
+### 8.2 Test Fixtures
+
+### 8.3 Reutilização de dados de teste
+
+### 8.4 Dados fixos vs dados dinâmicos
+
+---
+
+# 9. Boas Práticas e Anti-Patterns
+
+### 9.1 Testar comportamento em vez da implementação
+
+### 9.2 Evitar Over-Mocking
+
+### 9.3 Evitar testes frágeis (*Fragile Tests*)
+
+### 9.4 Um cenário por teste
+
+### 9.5 Minimizar código de preparação (*Setup*)
+
+---
+
+# 10. Code Coverage
+
+### 10.1 Objetivos de cobertura
+
+### 10.2 Interpretação dos resultados
+
+### 10.3 Code Coverage vs Qualidade dos Testes
+
+---
+
+# 11. Integração Contínua
+
+### 11.1 Execução automática dos testes
+
+### 11.2 Critérios para Pull Requests
+
+### 11.3 Gestão de falhas
+
+### 11.4 Quality Gates
+
+---
+
+# 12. Tópicos Avançados
+
+### 12.1 Testes de código assíncrono
+
+### 12.2 Retry e Circuit Breaker
+
+### 12.3 Testes de REST Clients
+
+### 12.4 Testes de Kafka Producers e Consumers
+
+### 12.5 Mutation Testing
+
+---
+
+# 13. Checklist para Code Review
+
+Durante a revisão de código, deverá ser validado que:
+
+* Os **Unit Tests** seguem uma estrutura clara e consistente.
+* O nome dos testes descreve corretamente o comportamento esperado.
+* Apenas as dependências externas são simuladas através de **Mocks**.
+* São cobertos cenários de sucesso, erro e casos limite.
+* As **Assertions** validam o comportamento esperado e não detalhes da implementação.
+* Os testes são independentes e determinísticos.
+* Novas funcionalidades incluem os respetivos **Unit Tests**.
+* Alterações que corrigem defeitos incluem testes de regressão.
+
+---
+
+# 14. Anexos
+
+## A. Frameworks e Bibliotecas
+
+* JUnit 5
+* Mockito
+* AssertJ
+* Spring Boot Test
+* Testcontainers (Integration Tests)
+
+## B. Exemplos
+
+* Estrutura de um Unit Test
+* Exemplo de Service Test
+* Exemplo de utilização do Mockito
+* Exemplo de Parameterized Test
+
+## C. Guias de Referência
+
+* Convenções de nomenclatura
+* Principais funcionalidades do Mockito
+* Principais Assertions do AssertJ
+* Anotações do JUnit 5
