@@ -6,7 +6,7 @@ Apresenta os objetivos, âmbito e conceitos fundamentais utilizados.
 
 ## 2. Estratégia de Testes
 
-Define o papel dos **Unit Tests** na estratégia global de testes e identifica o que deve (e não deve) ser testado.
+Define o papel dos  Unit Tests  na estratégia global de testes e identifica o que deve (e não deve) ser testado.
 
 ## 3. Princípios de Desenvolvimento
 
@@ -14,7 +14,7 @@ Estabelece as características de um bom Unit Test, convenções de numenculatur
 
 ## 4. Desenvolvimento de Unit Tests
 
-Descreve as práticas para criação de testes, incluindo preparação de dados, utilização de **Mocks**, **Assertions** e tratamento de exceções.
+Descreve as práticas para criação de testes, incluindo preparação de dados, utilização de  Mocks  ,  Assertions  e tratamento de exceções.
 
 ## 5. Testes por Tipo de Componente
 
@@ -34,7 +34,7 @@ Define estratégias para criação e reutilização de dados de teste, de forma 
 
 ## 9. Boas Práticas e Anti-Patterns
 
-Identifica práticas recomendadas e erros comuns que devem ser evitados durante o desenvolvimento de **Unit Tests**.
+Identifica práticas recomendadas e erros comuns que devem ser evitados durante o desenvolvimento de  Unit Tests  .
 
 ## 10. Code Coverage
 
@@ -50,7 +50,7 @@ Mais para cenários específicos e avancados como código assíncrono, Rest Clie
 
 ## 13. Checklist de Code Review
 
-Disponibiliza um conjunto de critérios para validar a qualidade e consistência dos **Unit Tests** durante a revisão de código.
+Disponibiliza um conjunto de critérios para validar a qualidade e consistência dos  Unit Tests  durante a revisão de código.
 
 ## 14. Anexos
 
