@@ -1,0 +1,88 @@
+# ADR: Process CSV Files Directly from S3
+
+## Context
+
+The application is responsible for periodically retrieving a CSV file from Amazon S3 and applying a set of business-domain operations to the data contained within the file.
+
+The initial design considered introducing a database as an intermediate storage layer. Under this approach, the CSV contents would be retrieved from S3, persisted into a database, and then a separate microservice would be responsible for retrieving the data from the database and performing the required business operations.
+
+After further consideration, we believe the database does not provide enough additional value to justify the additional complexity in this particular use case.
+
+The data is only required when the scheduled process runs, and the business operations are performed as part of the retrieval/processing flow. We do not currently have a requirement to query, update, or independently consume the CSV contents from a database outside of this process.
+
+Because S3 already provides durable storage for the source file, introducing another persistence layer would effectively duplicate the data without a clear business requirement for doing so.
+
+## Decision
+
+We will process the CSV file directly from S3 and will not introduce a database as an intermediate storage layer.
+
+The scheduler will retrieve the file from S3 and perform the required business-domain operations directly on the retrieved data.
+
+The original file in S3 will only be modified/replaced once processing has completed successfully. If processing fails, the existing file will remain unchanged so that the process can be retried.
+
+The flow will therefore be roughly:
+
+S3 → Scheduler/Processor → Business Operations → Successful processing → Update/replace S3 object
+
+Rather than:
+
+S3 → Database → Separate Microservice → Business Operations
+
+S3 remains the source of truth for the file, while the processing application is responsible for transforming or acting on the data when required.
+
+## Advantages
+
+The main advantage is reduced architectural complexity. We don't need to introduce a database, database schema, migrations, connection management, backups, monitoring, or another service purely to temporarily store data that already exists in S3.
+
+It also removes an additional microservice and the communication between the scheduler, database, and processing service. This reduces the number of components involved in what is otherwise a relatively straightforward processing flow.
+
+There is also less data duplication. The CSV already exists in S3, so persisting the same contents into a database creates a second representation of the same data that we would then need to keep consistent.
+
+Operationally, this should also be simpler. There are fewer infrastructure components to maintain and fewer potential points of failure.
+
+Another benefit is that the processing model is easier to understand. The application retrieves the current file, processes it, and updates the source only when processing succeeds. This gives us a relatively clear transactional boundary around the processing operation.
+
+Finally, this approach keeps the architecture aligned with the actual requirement. We don't currently have a requirement for persistent, queryable access to the contents of the CSV outside of the processing operation.
+
+## Disadvantages / Trade-offs
+
+The main trade-off is that we lose the database as a separate persisted representation of the data. If we later need to query the processed data independently of the CSV, a database or another persistence mechanism may become necessary.
+
+Processing directly from S3 also means that the application needs to handle the file as part of the processing operation. If the CSV becomes very large, this could introduce memory or processing-time considerations, and we may need to use streaming or chunked processing rather than loading the entire file into memory.
+
+Another consideration is failure handling. Because the source file is only updated after successful processing, we need to make sure that the processing operation is designed to be safely retried. Ideally, business operations should be idempotent, or we should otherwise have a mechanism to prevent a retry from applying the same operation twice.
+
+There is also less separation between retrieving the data and processing it. With the database approach, those concerns could be handled by separate services. In the chosen approach, the retrieval and processing flow are more closely coupled.
+
+Finally, if auditability or historical versions of the processed data become a requirement, simply replacing the S3 object may not be sufficient. In that case, we would need to introduce versioning, archival, or another mechanism for retaining historical states.
+
+## Alternatives Considered
+
+### S3 → Database → Processing Microservice
+
+This was the initial approach considered.
+
+The CSV would be retrieved from S3 and persisted into a database. A separate microservice would then retrieve the data from the database and perform the business operations.
+
+The main benefit of this approach would be having a persistent and queryable representation of the data, as well as a stronger separation between ingestion and processing.
+
+However, for the current requirements, this introduces additional infrastructure and operational complexity without a clear need for it. The database would primarily act as an intermediate copy of data that is already durably stored in S3.
+
+For this reason, we decided not to use this approach at this time.
+
+## Consequences
+
+We accept that the processing service will be responsible for handling the CSV directly and for ensuring that processing can be safely retried.
+
+We should ensure that:
+
+* The S3 object is not modified until processing completes successfully.
+* Failed processing leaves the original object available for retry.
+* Business operations are idempotent where possible.
+* Large files can be processed without requiring excessive memory.
+* Appropriate logging and monitoring exists around the processing lifecycle.
+* S3 versioning or another form of history is considered if retaining previous versions becomes important.
+
+If future requirements introduce a need for querying the data independently, maintaining processed state, supporting multiple consumers, or retaining a structured historical representation, we can revisit the decision and introduce a database or other persistence mechanism at that point.
+
+For the current use case, however, the additional persistence layer is considered unnecessary complexity, and processing the data directly from S3 provides a simpler architecture while still satisfying the functional requirements.
